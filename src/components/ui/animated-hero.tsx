@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Vortex } from "./vortex";
 
 function Hero() {
   const [titleNumber, setTitleNumber] = useState(0);
@@ -27,17 +28,23 @@ function Hero() {
 
   return (
     <div className="w-full">
-      <div className="container mx-auto">
-        <div className="flex gap-8 py-20 lg:py-40 items-center justify-center flex-col">
+      <Vortex
+        backgroundColor="black"
+        className="flex items-center flex-col justify-center px-4 md:px-10 py-20 lg:py-40 w-full h-full"
+        particleCount={500}
+        baseHue={220}
+        rangeY={100}
+      >
+        <div className="flex flex-col items-center gap-8">
           <div className="flex gap-4 flex-col">
             <h1 className="text-5xl md:text-7xl max-w-3xl tracking-tighter text-center font-regular">
-              <span className="text-foreground">Find Your Next</span>
+              <span className="text-white">Find Your Next</span>
               <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1">
                 &nbsp;
                 {titles.map((title, index) => (
                   <motion.span
                     key={index}
-                    className="absolute font-semibold text-primary"
+                    className="absolute font-semibold text-blue-400"
                     initial={{ opacity: 0, y: "-100" }}
                     transition={{ type: "spring", stiffness: 50 }}
                     animate={
@@ -56,10 +63,10 @@ function Hero() {
                   </motion.span>
                 ))}
               </span>
-              <span className="text-foreground">Idea</span>
+              <span className="text-white">Idea</span>
             </h1>
 
-            <p className="text-lg md:text-xl leading-relaxed tracking-tight text-muted-foreground max-w-2xl text-center">
+            <p className="text-lg md:text-xl leading-relaxed tracking-tight text-gray-300 max-w-2xl text-center">
               IdeaLab is your AI-powered partner for innovation. Generate unique business concepts, analyze market trends, and validate your ideas with data-driven insights to build the next big thing.
             </p>
           </div>
@@ -69,7 +76,7 @@ function Hero() {
             </Button>
           </div>
         </div>
-      </div>
+      </Vortex>
     </div>
   );
 }
