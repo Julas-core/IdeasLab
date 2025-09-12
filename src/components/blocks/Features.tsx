@@ -6,6 +6,12 @@ export function Features() {
     return (
         <section className="bg-gray-50 py-16 md:py-32 dark:bg-transparent">
             <div className="mx-auto max-w-3xl lg:max-w-5xl px-6">
+                <div className="text-center mb-12">
+                    <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Discover Your Next Venture</h2>
+                    <p className="mt-4 text-lg text-muted-foreground">
+                        IdeaLab provides a suite of tools to help you from inspiration to implementation.
+                    </p>
+                </div>
                 <div className="relative">
                     <div className="relative z-10 grid grid-cols-6 gap-3">
                         <Card className="relative col-span-full flex overflow-hidden lg:col-span-2">
