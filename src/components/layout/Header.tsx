@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Rocket, LogOut, User, Home } from "lucide-react";
 import { ThemeToggle } from "../theme/theme-toggle";
-import { useSupabase } from "@/integrations/supabase/index.js";
+import { useSupabase } from "@/integrations/supabase"; // Corrected import path
 import {
   DropdownMenu,
   DropdownMenuContent,
