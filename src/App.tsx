@@ -8,26 +8,23 @@ import Profile from "./pages/Profile";
 import Payments from "./pages/Payments"; // Import the new Payments page
 import { Toaster } from "sonner";
 import { SessionContextProvider } from "./integrations/supabase/session-context";
-import { ThemeProvider } from "@/components/theme/theme-provider";
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <SessionContextProvider>
-        <Toaster />
-        <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/my-ideas" element={<MyIdeas />} />
-            <Route path="/idea/:id" element={<IdeaDetail />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/payments" element={<Payments />} /> {/* New Payments route */}
-          </Routes>
-        </Router>
-      </SessionContextProvider>
-    </ThemeProvider>
+    <SessionContextProvider>
+      <Toaster />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/my-ideas" element={<MyIdeas />} />
+          <Route path="/idea/:id" element={<IdeaDetail />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/payments" element={<Payments />} /> {/* New Payments route */}
+        </Routes>
+      </Router>
+    </SessionContextProvider>
   );
 }
 
