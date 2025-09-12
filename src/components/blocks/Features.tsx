@@ -149,7 +149,7 @@ export function Features() {
                                 <div className="before:bg-[--color-border] relative mt-6 before:absolute before:inset-0 before:mx-auto before:w-px sm:-my-6 sm:-mr-6">
                                     <div className="relative flex h-full flex-col justify-center space-y-6 py-6">
                                         <div className="relative flex w-[calc(50%+0.875rem)] items-center justify-end gap-2">
-                                            <span className="block h-fit rounded border px-2 py-1 text-xs shadow-sm">Likeur</span>
+                                            <span className="block h-fit rounded border px-2 py-1 text-xs shadow-sm">Fit Score: 85</span>
                                             <div className="ring-background size-7 ring-4">
                                                 <img className="size-full rounded-full" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face" alt="" />
                                             </div>
@@ -158,10 +158,10 @@ export function Features() {
                                             <div className="ring-background size-8 ring-4">
                                                 <img className="size-full rounded-full" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" alt="" />
                                             </div>
-                                            <span className="block h-fit rounded border px-2 py-1 text-xs shadow-sm">M. Irung</span>
+                                            <span className="block h-fit rounded border px-2 py-1 text-xs shadow-sm">Market Score: 92</span>
                                         </div>
                                         <div className="relative flex w-[calc(50%+0.875rem)] items-center justify-end gap-2">
-                                            <span className="block h-fit rounded border px-2 py-1 text-xs shadow-sm">B. Ng</span>
+                                            <span className="block h-fit rounded border px-2 py-1 text-xs shadow-sm">Uniqueness: 78</span>
                                             <div className="ring-background size-7 ring-4">
                                                 <img className="size-full rounded-full" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face" alt="" />
                                             </div>
