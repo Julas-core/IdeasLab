@@ -13,6 +13,7 @@ import { Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { showError, showSuccess } from "@/utils/toast";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
+import { BGPattern } from "@/components/ui/bg-pattern";
 
 interface IdeaData {
   id: string;
@@ -72,7 +73,8 @@ const IdeaDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
+        <BGPattern variant="grid" mask="fade-edges" />
         <Header />
         <main className="container mx-auto p-4 md:p-8">
           <LoadingSkeleton />
@@ -87,7 +89,8 @@ const IdeaDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <BGPattern variant="grid" mask="fade-edges" />
       <Header />
       <main className="container mx-auto p-4 md:p-8">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">

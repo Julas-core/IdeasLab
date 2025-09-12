@@ -6,6 +6,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import Header from "@/components/layout/Header"; // Corrected import
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { BGPattern } from "@/components/ui/bg-pattern";
 
 function Login() {
   const navigate = useNavigate();
@@ -23,7 +24,8 @@ function Login() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative">
+      <BGPattern variant="grid" mask="fade-edges" />
       <Header />
       <main className="flex-grow container mx-auto p-4 md:p-8 flex items-center justify-center">
         <Card className="w-full max-w-md">

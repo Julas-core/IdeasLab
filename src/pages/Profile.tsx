@@ -12,6 +12,7 @@ import Header from "@/components/layout/Header"; // Corrected import
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from "@/utils/toast";
 import { User } from "@supabase/supabase-js";
+import { BGPattern } from "@/components/ui/bg-pattern";
 
 const profileFormSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters.").optional().or(z.literal('')),
@@ -83,7 +84,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <BGPattern variant="grid" mask="fade-edges" />
       <Header />
       <main className="container mx-auto p-4 md:p-8">
         <Card className="max-w-2xl mx-auto">

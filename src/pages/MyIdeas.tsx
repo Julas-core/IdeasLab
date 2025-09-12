@@ -6,6 +6,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BGPattern } from "@/components/ui/bg-pattern";
 
 interface SavedIdea {
   id: string;
@@ -41,7 +42,8 @@ const MyIdeas = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <BGPattern variant="grid" mask="fade-edges" />
       <Header />
       <main className="container mx-auto p-4 md:p-8">
         <div className="mb-8">

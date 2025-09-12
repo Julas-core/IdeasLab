@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate, Outlet } from 'react-router-dom';
 import Header from './Header'; // Corrected import
+import { BGPattern } from '@/components/ui/bg-pattern';
 
 const ProtectedRoute = () => {
   const [session, setSession] = useState<any>(null);
@@ -25,7 +26,8 @@ const ProtectedRoute = () => {
 
   if (loading) {
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background relative">
+            <BGPattern variant="grid" mask="fade-edges" />
             <Header />
             <div className="container mx-auto p-4 md:p-8">Loading...</div>
         </div>

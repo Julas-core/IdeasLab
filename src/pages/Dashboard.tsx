@@ -15,6 +15,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
+import { BGPattern } from "@/components/ui/bg-pattern";
 
 interface IdeaData {
   idea_title: string;
@@ -134,7 +135,8 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <BGPattern variant="grid" mask="fade-edges" />
       <Header />
       <main className="container mx-auto p-4 md:p-8">
         {isLoading ? (
