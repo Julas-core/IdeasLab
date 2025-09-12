@@ -25,7 +25,6 @@ export const Hero = () => {
               Learn More <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
-          <p className="text-sm text-zinc-400">Discover your next venture</p>
         </div>
       </div>
     </div>
