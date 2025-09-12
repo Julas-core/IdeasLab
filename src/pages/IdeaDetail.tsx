@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Header } from "@/components/layout/Header";
+import Header from "@/components/layout/Header"; // Corrected import
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { AIAnalysis, AnalysisData } from "@/components/ai/AIAnalysis";
 import { TrendSignals, TrendData } from "@/components/trends/TrendSignals";

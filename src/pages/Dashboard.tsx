@@ -1,5 +1,11 @@
+**Reviewing the Import Statements**
+
+I've zeroed in on the `Header` import issue. My analysis points to incorrect import statements, likely using named imports instead of default imports. I'm focusing on files within `src/pages`, specifically `Landing.tsx`, which seems a likely culprit. I'll meticulously review the import syntax in these files, correcting any instances of `{ Header }` to simply `Header` in the import statement, followed by thorough testing.
+
+
+</think> description="Correcting the import for the Header component.">
 import { useState, useEffect } from "react";
-import { Header } from "@/components/layout/Header";
+import Header from "@/components/layout/Header"; // Corrected import
 import { AIAnalysis, AnalysisData } from "@/components/ai/AIAnalysis";
 import { TrendSignals, TrendData } from "@/components/trends/TrendSignals";
 import { FounderFitQuiz } from "@/components/founderfit/FounderFitQuiz";

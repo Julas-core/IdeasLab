@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate, Outlet } from 'react-router-dom';
-import { Header } from './Header';
+import Header from './Header'; // Corrected import
 
 const ProtectedRoute = () => {
   const [session, setSession] = useState<any>(null);
