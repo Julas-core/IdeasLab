@@ -50,7 +50,7 @@ export function TestimonialCard({
       </div>
       <p className="sm:text-md mt-4 text-sm text-muted-foreground">
         {text}
-      </p
+      </p>
     </Card>
   )
 }
