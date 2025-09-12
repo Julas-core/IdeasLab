@@ -12,7 +12,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { BGPattern } from "@/components/ui/bg-pattern";
 
 // Load Stripe with your publishable key (replace with your actual key)
-const stripePromise = loadStripe("pk_test_your_publishable_key_here"); // Replace with your Stripe publishable key
+const stripePromise = loadStripe("pk_test_51RydjgRxghBL4I5rMfD3fkXmapCeK1rrW7kuaceCJMIMWeYgI1ZGnQqYeTWyGodwLQxK42pcVZ8pZZIXfjSou1r0004fvvVB9z"); // Replace with your Stripe publishable key
 
 interface Subscription {
   status: "free" | "pro";
