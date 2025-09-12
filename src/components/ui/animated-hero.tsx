@@ -10,10 +10,10 @@ export const Hero = () => {
         <RaycastAnimatedBackground />
         <div className="relative z-10 flex gap-8 py-20 lg:py-40 items-center justify-center flex-col">
           <div className="flex gap-4 flex-col">
-            <h1 className="text-5xl md:text-7xl max-w-3xl tracking-tighter text-center font-regular">
+            <h1 className="text-5xl md:text-7xl max-w-3xl tracking-tighter text-center font-regular text-zinc-900 dark:text-zinc-50">
               Generate Your Next Big Idea with AI
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl text-center">
+            <p className="text-lg md:text-xl text-zinc-700 dark:text-zinc-300 max-w-2xl text-center">
               IdeaLab uses advanced AI to analyze market trends and help you discover innovative startup opportunities.
             </p>
           </div>
