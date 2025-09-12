@@ -136,6 +136,16 @@ const Dashboard = () => {
     }
   };
 
+  // Construct prompt for AI builders based on current idea
+  const getBuilderPrompt = () => {
+    if (!currentIdea) return '';
+    return encodeURIComponent(
+      `Build a startup app for "${currentIdea.idea_title}". Problem: ${currentIdea.problem}. Solution: ${currentIdea.solution}. Target market: ${currentIdea.market}. Include key features like user authentication and a basic dashboard.`
+    );
+  };
+
+  const prompt = getBuilderPrompt();
+
   return (
     <div className="min-h-screen bg-background relative">
       <BGPattern variant="grid" mask="fade-edges" />
@@ -205,47 +215,47 @@ const Dashboard = () => {
                     <CardHeader>
                       <CardTitle>Build Your Idea</CardTitle>
                       <CardDescription>
-                        Ready to turn your validated concept into a real app? Use these no-code AI builders to prototype and launch quickly.
+                        Ready to turn your validated concept into a real app? Use these no-code AI builders to prototype and launch quickly. (Prompts pre-filled with your idea details!)
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                       <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href="https://lovable.dev" target="_blank" rel="noopener noreferrer">
+                        <a href={`https://lovable.dev?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
                           <img src="https://lovable.dev/favicon.ico" alt="Lovable" className="h-4 w-4 rounded" />
                           <span>Lovable</span>
                           <ExternalLink className="h-4 w-4 ml-auto" />
                         </a>
                       </Button>
                       <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href="https://leap.new" target="_blank" rel="noopener noreferrer">
+                        <a href={`https://leap.new?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
                           <img src="https://leap.new/favicon.ico" alt="Leap" className="h-4 w-4 rounded" />
                           <span>Leap</span>
                           <ExternalLink className="h-4 w-4 ml-auto" />
                         </a>
                       </Button>
                       <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href="https://base44.dev" target="_blank" rel="noopener noreferrer">
+                        <a href={`https://base44.dev?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
                           <img src="https://base44.dev/favicon.ico" alt="Base44" className="h-4 w-4 rounded" />
                           <span>Base44</span>
                           <ExternalLink className="h-4 w-4 ml-auto" />
                         </a>
                       </Button>
                       <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href="https://bolt.new" target="_blank" rel="noopener noreferrer">
+                        <a href={`https://bolt.new?q=${prompt}`} target="_blank" rel="noopener noreferrer">
                           <img src="https://bolt.new/favicon.ico" alt="Bolt" className="h-4 w-4 rounded" />
                           <span>Bolt</span>
                           <ExternalLink className="h-4 w-4 ml-auto" />
                         </a>
                       </Button>
                       <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href="https://v0.dev" target="_blank" rel="noopener noreferrer">
+                        <a href={`https://v0.dev/new?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
                           <img src="https://v0.dev/favicon.ico" alt="v0" className="h-4 w-4 rounded" />
                           <span>v0</span>
                           <ExternalLink className="h-4 w-4 ml-auto" />
                         </a>
                       </Button>
                       <Button variant="outline" size="sm" asChild className="justify-start space-x-2 md:col-span-2 lg:col-span-1">
-                        <a href="https://replit.com/ai" target="_blank" rel="noopener noreferrer">
+                        <a href={`https://replit.com/ai?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
                           <img src="https://replit.com/favicon.ico" alt="Replit AI" className="h-4 w-4 rounded" />
                           <span>Replit AI</span>
                           <ExternalLink className="h-4 w-4 ml-auto" />
