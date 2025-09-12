@@ -13,8 +13,10 @@ export function ThemeToggle() {
     setIsMounted(true)
   }, [])
 
-  const handleThemeChange = (isSelected: boolean) => {
-    setTheme(isSelected ? "dark" : "light")
+  const isDark = theme === "dark"
+
+  const handleThemeChange = (checked: boolean) => {
+    setTheme(checked ? "dark" : "light")
   }
 
   // Avoid rendering the switch on the server to prevent hydration mismatch
@@ -27,8 +29,8 @@ export function ThemeToggle() {
     <div className="flex items-center gap-2">
       <Sun className="h-5 w-5" />
       <Switch
-        isSelected={theme === "dark"}
-        onChange={handleThemeChange}
+        checked={isDark}
+        onCheckedChange={handleThemeChange}
         aria-label="Toggle theme"
       />
       <Moon className="h-5 w-5" />
