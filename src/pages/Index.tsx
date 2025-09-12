@@ -8,6 +8,10 @@ import { ExportReport } from "@/components/export/ExportReport";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, Save } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { showSuccess, showError } from "@/utils/toast";
 
 interface IdeaData {
   idea_title: string;
@@ -16,57 +20,9 @@ interface IdeaData {
   market: string;
 }
 
-// Mock data generation functions for local fallback
-const generateMockIdea = (keyword: string): IdeaData => ({
-    idea_title: `AI-Powered ${keyword} Platform`,
-    problem: `People interested in ${keyword} lack a centralized, easy-to-use solution.`,
-    solution: `A comprehensive platform that uses AI to provide personalized ${keyword} recommendations and resources.`,
-    market: `Enthusiasts and professionals in the ${keyword} space.`,
-});
-
-const generateMockAnalysis = (idea: IdeaData): AnalysisData => ({
-  problem: `A deeper look into the problem of '${idea.problem}'. It seems to affect ${idea.market} significantly.`,
-  opportunity: `There is a huge opportunity to solve this with '${idea.solution}'. The market is ripe for disruption.`,
-  targetAudience: `The primary target audience is ${idea.market}, specifically those who struggle with this daily.`,
-  competitors: "Current competitors are slow and expensive. Key players include LegacyCorp and OldTech Inc.",
-  revenuePotential: "High potential for a subscription-based model, with projected ARR of $5M in 3 years.",
-  risks: "Market adoption could be slow. Technological hurdles may arise.",
-  whyNow: "Recent advancements in technology and a shift in consumer behavior make this the perfect time.",
-});
-
-const generateMockTrends = (idea: IdeaData): TrendData => ({
-    googleTrends: [
-        { name: idea.idea_title.split(" ")[0], interest: Math.floor(Math.random() * 100) },
-        { name: "competitor A", interest: Math.floor(Math.random() * 100) },
-        { name: "competitor B", interest: Math.floor(Math.random() * 100) },
-    ],
-    redditMentions: [
-        { name: idea.idea_title.split(" ")[0], mentions: Math.floor(Math.random() * 500) },
-        { name: "related topic", mentions: Math.floor(Math.random() * 500) },
-    ]
-});
-
-const generateMockGoToMarket = (idea: IdeaData): GoToMarketData => ({
-    landingPageCopy: {
-        headline: `The Ultimate Solution for ${idea.problem}`,
-        subheadline: `With ${idea.idea_title}, you can finally achieve your goals without the hassle.`,
-        cta: "Get Started for Free",
-    },
-    brandNameSuggestions: ["Solutionify", `${idea.idea_title.split(" ")[0]}Hub`, "NextGen Solutions"],
-    adCreativeIdeas: [
-        `A video showing someone struggling with '${idea.problem}' and then finding relief with '${idea.solution}'.`,
-        `A carousel ad on Instagram showcasing key features.`,
-    ]
-});
-
-const trendingTopics = [
-  "Sustainable Packaging", "AI for Personal Finance", "Remote Team Collaboration",
-  "Mental Wellness Apps", "Hyperlocal Delivery", "Personalized Nutrition",
-  "Gamified Education", "Circular Economy Fashion",
-];
-
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [ideaGenerated, setIdeaGenerated] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<IdeaData | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
@@ -74,40 +30,78 @@ const Index = () => {
   const [fitScore, setFitScore] = useState<number | null>(null);
   const [isAnalyzingFit, setIsAnalyzingFit] = useState(false);
   const [goToMarketData, setGoToMarketData] = useState<GoToMarketData | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const fetchIdeaOfTheDay = () => {
-      setIsLoading(true);
-      setFitScore(null); // Reset fit score for new idea
-      // Simulate API call to the edge function
-      setTimeout(() => {
-        const randomTopic = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
-        const idea = generateMockIdea(randomTopic);
-        
-        setCurrentIdea(idea);
-        setAnalysisData(generateMockAnalysis(idea));
-        setTrendData(generateMockTrends(idea));
-        setGoToMarketData(generateMockGoToMarket(idea));
-        
-        setIdeaGenerated(prev => !prev); // Toggle to reset quiz
-        setIsLoading(false);
-      }, 1500);
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
     };
-
+    checkUser();
     fetchIdeaOfTheDay();
   }, []);
+
+  const fetchIdeaOfTheDay = async () => {
+    setIsLoading(true);
+    setFitScore(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-idea');
+      if (error) throw error;
+
+      setCurrentIdea(data.idea);
+      setAnalysisData(data.analysis);
+      setTrendData(data.trends);
+      setGoToMarketData(data.goToMarket);
+      setIdeaGenerated(prev => !prev);
+    } catch (error) {
+      console.error("Error fetching new idea:", error);
+      showError("Failed to generate a new idea. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAnalyzeFit = (description: string) => {
     setIsAnalyzingFit(true);
     setFitScore(null);
-    // Simulate AI analysis
     setTimeout(() => {
-      // Simple logic: longer description = higher score, plus some randomness
       const baseScore = Math.min(description.length / 2, 70);
       const randomFactor = Math.floor(Math.random() * 30);
       setFitScore(Math.min(Math.round(baseScore + randomFactor), 99));
       setIsAnalyzingFit(false);
     }, 1500);
+  };
+
+  const handleSaveIdea = async () => {
+    if (!user) {
+      showError("You must be logged in to save an idea.");
+      return;
+    }
+    if (!currentIdea) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from('ideas').insert({
+        user_id: user.id,
+        idea_title: currentIdea.idea_title,
+        problem: currentIdea.problem,
+        solution: currentIdea.solution,
+        market: currentIdea.market,
+        analysis: analysisData,
+        trend_data: trendData,
+        go_to_market: goToMarketData,
+        fit_score: fitScore,
+      });
+
+      if (error) throw error;
+      showSuccess("Idea saved successfully!");
+    } catch (error) {
+      console.error("Error saving idea:", error);
+      showError("Failed to save idea. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -119,12 +113,26 @@ const Index = () => {
         ) : (
           currentIdea && (
             <>
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold tracking-tight">Idea of the Day</h2>
-                <p className="text-muted-foreground">An AI-generated startup concept based on emerging trends.</p>
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight">Idea of the Day</h2>
+                  <p className="text-muted-foreground">An AI-generated startup concept based on emerging trends.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={fetchIdeaOfTheDay} disabled={isLoading}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    New Idea
+                  </Button>
+                  {user && (
+                    <Button onClick={handleSaveIdea} disabled={isSaving}>
+                      <Save className="mr-2 h-4 w-4" />
+                      {isSaving ? 'Saving...' : 'Save Idea'}
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg-col-span-1 space-y-8">
+                <div className="lg:col-span-1 space-y-8">
                   <Card>
                     <CardHeader>
                       <CardTitle>{currentIdea.idea_title}</CardTitle>
