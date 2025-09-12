@@ -1,132 +1,129 @@
 "use client";
 
 import * as React from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useOnClickOutside } from "usehooks-ts";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Tab {
   title: string;
-  icon: LucideIcon;
-  type?: never;
+  icon?: React.ComponentType<{ className?: string }>;
+  link: string;
 }
-
-interface Separator {
-  type: "separator";
-  title?: never;
-  icon?: never;
-}
-
-type TabItem = Tab | Separator;
 
 interface ExpandableTabsProps {
-  tabs: TabItem[];
-  className?: string;
-  activeColor?: string;
+  tabs: Tab[];
   onChange?: (index: number | null) => void;
   selectedIndex?: number | null;
+  className?: string;
 }
-
-const buttonVariants = {
-  initial: {
-    gap: 0,
-    paddingLeft: ".5rem",
-    paddingRight: ".5rem",
-  },
-  animate: (isSelected: boolean) => ({
-    gap: isSelected ? ".5rem" : 0,
-    paddingLeft: isSelected ? "1rem" : ".5rem",
-    paddingRight: isSelected ? "1rem" : ".5rem",
-  }),
-};
-
-const spanVariants = {
-  initial: { width: 0, opacity: 0 },
-  animate: { width: "auto", opacity: 1 },
-  exit: { width: 0, opacity: 0 },
-};
-
-const transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
 
 export function ExpandableTabs({
   tabs,
-  className,
-  activeColor = "text-primary",
   onChange,
-  selectedIndex,
+  selectedIndex = 0,
+  className,
 }: ExpandableTabsProps) {
-  const [selected, setSelected] = React.useState<number | null>(
-    selectedIndex ?? null
-  );
-  const outsideClickRef = React.useRef(null);
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [scrollLeft, setScrollLeft] = React.useState(0);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    setSelected(selectedIndex ?? null);
-  }, [selectedIndex]);
-
-  useOnClickOutside(outsideClickRef, () => {
-    setSelected(null);
-    // We don't want to trigger onChange when clicking outside
-  });
-
-  const handleSelect = (index: number) => {
-    setSelected(index);
-    onChange?.(index);
+  const handleTabClick = (index: number) => {
+    if (onChange) {
+      onChange(index);
+    }
   };
 
-  const Separator = () => (
-    <div className="mx-1 h-[24px] w-[1.2px] bg-border" aria-hidden="true" />
-  );
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      setScrollLeft(scrollContainerRef.current.scrollLeft);
+    }
+  };
+
+  const scrollToTab = (index: number) => {
+    const tabElement = containerRef.current?.children[index] as HTMLElement;
+    if (tabElement && scrollContainerRef.current) {
+      const containerRect = scrollContainerRef.current.getBoundingClientRect();
+      const tabRect = tabElement.getBoundingClientRect();
+      
+      const scrollLeft = tabElement.offsetLeft - 
+        (containerRect.width - tabRect.width) / 2 + 
+        scrollContainerRef.current.scrollLeft;
+      
+      scrollContainerRef.current.scrollTo({
+        left: Math.max(0, scrollLeft),
+        behavior: "smooth"
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    if (selectedIndex !== undefined && selectedIndex !== null) {
+      scrollToTab(selectedIndex);
+    }
+  }, [selectedIndex]);
+
+  const visibleTabs = isExpanded ? tabs : tabs.slice(0, 3);
+  const showMoreIndicator = tabs.length > 3 && !isExpanded;
 
   return (
     <div
-      ref={outsideClickRef}
       className={cn(
         "flex flex-wrap items-center gap-2 rounded-2xl border bg-background p-1 shadow-sm",
         className
       )}
     >
-      {tabs.map((tab, index) => {
-        if (tab.type === "separator") {
-          return <Separator key={`separator-${index}`} />;
-        }
+      <div 
+        ref={scrollContainerRef}
+        className="flex items-center gap-2 overflow-x-auto scrollbar-hide"
+        onScroll={handleScroll}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <div 
+          ref={containerRef}
+          className="flex items-center gap-2 min-w-max"
+        >
+          {visibleTabs.map((tab, index) => {
+            const isSelected = selectedIndex === index;
+            const Icon = tab.icon;
+            
+            return (
+              <button
+                key={index}
+                onClick={() => handleTabClick(index)}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}
+                style={{
+                  transform: `translateX(${-scrollLeft}px)`,
+                }}
+              >
+                {Icon && <Icon className="h-4 w-4" />}
+                <span>{tab.title}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-        const Icon = tab.icon;
-        return (
-          <motion.button
-            key={tab.title}
-            variants={buttonVariants}
-            initial={false}
-            animate="animate"
-            custom={selected === index}
-            onClick={() => handleSelect(index)}
-            transition={transition}
-            className={cn(
-              "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
-              selected === index
-                ? cn("bg-muted", activeColor)
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
+      {showMoreIndicator && (
+        <div className="flex items-center gap-1 ml-2">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent"
           >
-            <Icon size={20} />
-            <AnimatePresence initial={false}>
-              {selected === index && (
-                <motion.span
-                  variants={spanVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={transition}
-                  className="overflow-hidden"
-                >
-                  {tab.title}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        );
-      })}
+            {isExpanded ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          <span className="text-xs text-muted-foreground">+{tabs.length - 3}</span>
+        </div>
+      )}
     </div>
   );
 }
