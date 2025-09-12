@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "./button";
 import { Testimonials } from "../Testimonials";
 
-export function AnimatedHero() {
+export function Hero() {
   return (
     <div>
       <div className="container mx-auto">
