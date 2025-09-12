@@ -1,5 +1,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 
+// Simulate the AI finding a trending topic
+const trendingTopics = [
+  "Sustainable Packaging",
+  "AI for Personal Finance",
+  "Remote Team Collaboration",
+  "Mental Wellness Apps",
+  "Hyperlocal Delivery",
+  "Personalized Nutrition",
+  "Gamified Education",
+  "Circular Economy Fashion",
+];
+
 // Mock data generation functions
 const generateMockIdea = (keyword: string) => ({
     idea_title: `AI-Powered ${keyword} Platform`,
@@ -54,8 +66,8 @@ serve(async (req) => {
   }
 
   try {
-    const { keyword } = await req.json()
-    if (!keyword) throw new Error("Keyword is required.");
+    // The AI now picks its own topic
+    const keyword = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
 
     const idea = generateMockIdea(keyword);
     const analysis = generateMockAnalysis(idea);

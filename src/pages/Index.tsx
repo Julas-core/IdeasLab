@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
-import { KeywordForm, KeywordFormValues } from "@/components/ideagen/KeywordForm";
 import { AIAnalysis, AnalysisData } from "@/components/ai/AIAnalysis";
 import { TrendSignals, TrendData } from "@/components/trends/TrendSignals";
 import { FounderFitQuiz } from "@/components/founderfit/FounderFitQuiz";
 import { GoToMarketHelpers, GoToMarketData } from "@/components/gotomarket/GoToMarketHelpers";
 import { ExportReport } from "@/components/export/ExportReport";
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-// This type is now used for the AI-generated idea
 interface IdeaData {
   idea_title: string;
   problem: string;
@@ -59,9 +59,14 @@ const generateMockGoToMarket = (idea: IdeaData): GoToMarketData => ({
     ]
 });
 
+const trendingTopics = [
+  "Sustainable Packaging", "AI for Personal Finance", "Remote Team Collaboration",
+  "Mental Wellness Apps", "Hyperlocal Delivery", "Personalized Nutrition",
+  "Gamified Education", "Circular Economy Fashion",
+];
 
 const Index = () => {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [ideaGenerated, setIdeaGenerated] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<IdeaData | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
@@ -69,49 +74,70 @@ const Index = () => {
   const [fitScore, setFitScore] = useState<number | null>(null);
   const [goToMarketData, setGoToMarketData] = useState<GoToMarketData | null>(null);
 
-  const handleKeywordSubmit = (values: KeywordFormValues) => {
-    setIsGenerating(true);
-    setIdeaGenerated(false);
-    setCurrentIdea(null);
-    setAnalysisData(null);
-    setTrendData(null);
-    setGoToMarketData(null);
-    setFitScore(null);
-    
-    // Simulate API call to the new edge function
-    setTimeout(() => {
-      const idea = generateMockIdea(values.keyword);
-      setCurrentIdea(idea);
-      setAnalysisData(generateMockAnalysis(idea));
-      setTrendData(generateMockTrends(idea));
-      setGoToMarketData(generateMockGoToMarket(idea));
-      setIsGenerating(false);
-      setIdeaGenerated(prev => !prev); // Toggle to reset quiz
-    }, 1500);
-  };
+  useEffect(() => {
+    const fetchIdeaOfTheDay = () => {
+      setIsLoading(true);
+      // Simulate API call to the edge function
+      setTimeout(() => {
+        const randomTopic = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
+        const idea = generateMockIdea(randomTopic);
+        
+        setCurrentIdea(idea);
+        setAnalysisData(generateMockAnalysis(idea));
+        setTrendData(generateMockTrends(idea));
+        setGoToMarketData(generateMockGoToMarket(idea));
+        
+        setIdeaGenerated(prev => !prev); // Toggle to reset quiz
+        setIsLoading(false);
+      }, 1500);
+    };
+
+    fetchIdeaOfTheDay();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-1 space-y-8">
-            <KeywordForm onSubmit={handleKeywordSubmit} isGenerating={isGenerating} />
-            {currentIdea && <FounderFitQuiz onScoreChange={setFitScore} ideaSubmitted={ideaGenerated} />}
-            {currentIdea && <ExportReport 
-                idea={currentIdea}
-                analysis={analysisData}
-                trends={trendData}
-                fitScore={fitScore}
-                goToMarket={goToMarketData}
-            />}
-          </div>
-          <div className="lg:col-span-2 space-y-8">
-            <AIAnalysis data={analysisData} />
-            <TrendSignals data={trendData} />
-            <GoToMarketHelpers data={goToMarketData} />
-          </div>
-        </div>
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : (
+          currentIdea && (
+            <>
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold tracking-tight">Idea of the Day</h2>
+                <p className="text-muted-foreground">An AI-generated startup concept based on emerging trends.</p>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <div className="lg:col-span-1 space-y-8">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{currentIdea.idea_title}</CardTitle>
+                      <CardDescription>{currentIdea.problem}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p><span className="font-semibold">Solution: </span>{currentIdea.solution}</p>
+                      <p className="mt-2"><span className="font-semibold">Market: </span>{currentIdea.market}</p>
+                    </CardContent>
+                  </Card>
+                  <FounderFitQuiz onScoreChange={setFitScore} ideaSubmitted={ideaGenerated} />
+                  <ExportReport 
+                      idea={currentIdea}
+                      analysis={analysisData}
+                      trends={trendData}
+                      fitScore={fitScore}
+                      goToMarket={goToMarketData}
+                  />
+                </div>
+                <div className="lg:col-span-2 space-y-8">
+                  <AIAnalysis data={analysisData} />
+                  <TrendSignals data={trendData} />
+                  <GoToMarketHelpers data={goToMarketData} />
+                </div>
+              </div>
+            </>
+          )
+        )}
       </main>
       <MadeWithDyad />
     </div>
