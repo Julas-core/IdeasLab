@@ -3,7 +3,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { useTheme } from "../components/theme/theme-provider";
+import { useTheme } from "next-themes";
 
 function Login() {
   const navigate = useNavigate();
