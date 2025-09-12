@@ -6,7 +6,10 @@ export const Features = () => {
         <section className="bg-gray-50 py-16 md:py-32 dark:bg-transparent">
             <div className="mx-auto max-w-3xl lg:max-w-5xl px-6">
                 <div className="mb-12 text-center">
-                    <h2 className="text-4xl font-bold tracking-tighter sm:text-5xl">Features</h2>
+                    <h2 className="text-4xl font-bold tracking-tighter sm:text-5xl">Discover Your Next Venture</h2>
+                    <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-700 dark:text-zinc-300">
+                        IdeaLab provides you with the tools to turn a spark of an idea into a viable business concept.
+                    </p>
                 </div>
                 <div className="relative">
                     <div className="relative z-10 grid grid-cols-6 gap-3">
