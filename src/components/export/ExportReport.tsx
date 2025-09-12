@@ -1,12 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IdeaFormValues } from "../ideacapture/IdeaForm";
 import { AnalysisData } from "../ai/AIAnalysis";
 import { TrendData } from "../trends/TrendSignals";
 import { GoToMarketData } from "../gotomarket/GoToMarketHelpers";
 
+// This type is now used for the AI-generated idea
+interface IdeaData {
+  idea_title: string;
+  problem: string;
+  solution: string;
+  market: string;
+}
+
 interface ExportReportProps {
-    idea: IdeaFormValues | null;
+    idea: IdeaData | null;
     analysis: AnalysisData | null;
     trends: TrendData | null;
     fitScore: number | null;

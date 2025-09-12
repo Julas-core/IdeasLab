@@ -1,6 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 
 // Mock data generation functions
+const generateMockIdea = (keyword: string) => ({
+    idea_title: `AI-Powered ${keyword} Platform`,
+    problem: `People interested in ${keyword} lack a centralized, easy-to-use solution.`,
+    solution: `A comprehensive platform that uses AI to provide personalized ${keyword} recommendations and resources.`,
+    market: `Enthusiasts and professionals in the ${keyword} space.`,
+});
+
 const generateMockAnalysis = (idea: any) => ({
   problem: `A deeper look into the problem of '${idea.problem}'. It seems to affect ${idea.market} significantly.`,
   opportunity: `There is a huge opportunity to solve this with '${idea.solution}'. The market is ripe for disruption.`,
@@ -47,13 +54,16 @@ serve(async (req) => {
   }
 
   try {
-    const idea = await req.json()
+    const { keyword } = await req.json()
+    if (!keyword) throw new Error("Keyword is required.");
 
+    const idea = generateMockIdea(keyword);
     const analysis = generateMockAnalysis(idea);
     const trends = generateMockTrends(idea);
     const goToMarket = generateMockGoToMarket(idea);
 
     const responseData = {
+        idea,
         analysis,
         trends,
         goToMarket,
