@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Shield, Users } from 'lucide-react';
+import { Shield, Users, FileText } from 'lucide-react';
 
 export function Features() {
     return (
@@ -9,7 +9,7 @@ export function Features() {
                 <div className="relative">
                     <div className="relative z-10 grid grid-cols-6 gap-3">
                         <Card className="relative col-span-full flex overflow-hidden lg:col-span-2">
-                            <CardContent className="relative m-auto size-fit pt-6">
+                            <CardContent className="relative m-auto size-fit p-6">
                                 <div className="relative flex h-24 w-56 items-center">
                                     <svg className="text-muted absolute inset-0 size-full" viewBox="0 0 254 104" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path
@@ -17,9 +17,10 @@ export function Features() {
                                             fill="currentColor"
                                         />
                                     </svg>
-                                    <span className="mx-auto block w-fit text-5xl font-semibold">100%</span>
+                                    <span className="mx-auto block w-fit text-5xl font-semibold">AI</span>
                                 </div>
-                                <h2 className="mt-6 text-center text-3xl font-semibold">Customizable</h2>
+                                <h2 className="mt-6 text-center text-3xl font-semibold">AI-Powered Analysis</h2>
+                                <p className="mt-2 text-center text-sm text-foreground">Leverage advanced AI to dissect your business ideas, providing deep insights and validation.</p>
                             </CardContent>
                         </Card>
                         <Card className="relative col-span-full overflow-hidden sm:col-span-3 lg:col-span-2">
@@ -46,8 +47,8 @@ export function Features() {
                                     </svg>
                                 </div>
                                 <div className="relative z-10 mt-6 space-y-2 text-center">
-                                    <h2 className="group-hover:text-secondary-950 text-lg font-medium transition dark:text-white">Secure by default</h2>
-                                    <p className="text-foreground">Provident fugit and vero voluptate. magnam magni doloribus dolores voluptates a sapiente nisi.</p>
+                                    <h2 className="group-hover:text-secondary-950 text-lg font-medium transition dark:text-white">Data-Driven Insights</h2>
+                                    <p className="text-foreground">Make informed decisions with real-time market trends and data-driven analysis for each idea.</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -89,8 +90,8 @@ export function Features() {
                                     </svg>
                                 </div>
                                 <div className="relative z-10 mt-14 space-y-2 text-center">
-                                    <h2 className="text-lg font-medium transition">Faster than light</h2>
-                                    <p className="text-foreground">Provident fugit vero voluptate. magnam magni doloribus dolores voluptates inventore nisi.</p>
+                                    <h2 className="text-lg font-medium transition">Market Trend Analysis</h2>
+                                    <p className="text-foreground">Stay ahead of the curve by understanding current market trends and how your idea fits in.</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -98,11 +99,11 @@ export function Features() {
                             <CardContent className="grid pt-6 sm:grid-cols-2">
                                 <div className="relative z-10 flex flex-col justify-between space-y-12 lg:space-y-6">
                                     <div className="relative flex aspect-square size-12 rounded-full border before:absolute before:-inset-2 before:rounded-full before:border dark:border-white/10 dark:before:border-white/5">
-                                        <Shield className="m-auto size-5" strokeWidth={1} />
+                                        <FileText className="m-auto size-5" strokeWidth={1} />
                                     </div>
                                     <div className="space-y-2">
-                                        <h2 className="group-hover:text-secondary-950 text-lg font-medium text-zinc-800 transition dark:text-white">Faster than light</h2>
-                                        <p className="text-foreground">Provident fugit vero voluptate. Voluptates a sapiente inventore nisi.</p>
+                                        <h2 className="group-hover:text-secondary-950 text-lg font-medium text-zinc-800 transition dark:text-white">Structured Idea Development</h2>
+                                        <p className="text-foreground">Organize your thoughts clearly by defining the problem, solution, and target market for your venture.</p>
                                     </div>
                                 </div>
                                 <div className="rounded-tl-[--radius] relative -mb-6 -mr-6 mt-6 h-fit border-l border-t p-6 py-6 sm:ml-6">
@@ -141,8 +142,8 @@ export function Features() {
                                         <Users className="m-auto size-6" strokeWidth={1} />
                                     </div>
                                     <div className="space-y-2">
-                                        <h2 className="text-lg font-medium transition">Keep your loved ones safe</h2>
-                                        <p className="text-foreground">Voluptate. magnam magni doloribus dolores voluptates a sapiente inventore nisi.</p>
+                                        <h2 className="text-lg font-medium transition">Personalized Fit Score</h2>
+                                        <p className="text-foreground">Get a unique 'fit score' that evaluates how well your idea aligns with your personal skills and interests.</p>
                                     </div>
                                 </div>
                                 <div className="before:bg-[--color-border] relative mt-6 before:absolute before:inset-0 before:mx-auto before:w-px sm:-my-6 sm:-mr-6">
