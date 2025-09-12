@@ -1,14 +1,19 @@
+import Header from "@/components/layout/Header";
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { Hero } from "@/components/ui/animated-hero";
+import { Features } from "@/components/blocks/Features";
+import { BGPattern } from "@/components/ui/bg-pattern";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">
-          Start building your amazing project here!
-        </p>
-      </div>
+    <div className="min-h-screen bg-background relative">
+      <BGPattern variant="grid" mask="fade-edges" />
+      <Header />
+      <main>
+        <Hero />
+        <Features />
+      </main>
+      <MadeWithDyad />
     </div>
   );
 };

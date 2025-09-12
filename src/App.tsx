@@ -1,27 +1,31 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import MyIdeas from "./pages/MyIdeas";
+import IdeaDetail from "./pages/IdeaDetail";
+import Profile from "./pages/Profile";
+import Payments from "./pages/Payments"; // Import the new Payments page
+import { Toaster } from "sonner";
+import { SessionContextProvider } from "./integrations/supabase/session-context";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <SessionContextProvider>
       <Toaster />
-      <Sonner />
-      <BrowserRouter>
+      <Router>
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/my-ideas" element={<MyIdeas />} />
+          <Route path="/idea/:id" element={<IdeaDetail />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/payments" element={<Payments />} /> {/* New Payments route */}
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </Router>
+    </SessionContextProvider>
+  );
+}
 
 export default App;
