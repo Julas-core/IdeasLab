@@ -6,7 +6,7 @@ import MyIdeas from "./pages/MyIdeas";
 import IdeaDetail from "./pages/IdeaDetail";
 import Profile from "./pages/Profile";
 import Payments from "./pages/Payments"; // Import the new Payments page
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import { SessionContextProvider } from "./integrations/supabase/session-context";
 
 function App() {
