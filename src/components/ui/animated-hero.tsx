@@ -6,7 +6,7 @@ import { RaycastAnimatedBackground } from "./raycast-animated-background";
 export const Hero = () => {
   return (
     <div>
-      <div className="container mx-auto relative overflow-hidden rounded-2xl border bg-background/50 backdrop-blur-sm">
+      <div className="container mx-auto relative bg-background/50 backdrop-blur-sm">
         <RaycastAnimatedBackground />
         <div className="relative z-10 flex gap-8 py-20 lg:py-40 items-center justify-center flex-col">
           <div className="flex gap-4 flex-col">
