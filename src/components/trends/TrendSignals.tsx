@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp } from "lucide-react";
 
 export interface TrendData {
     googleTrends: { name: string; interest: number }[];
@@ -15,44 +15,60 @@ export const TrendSignals = ({ data }: TrendSignalsProps) => {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Trend Signals</CardTitle>
+                    <CardTitle className="flex items-center"><TrendingUp className="mr-2" /> Trend Signals</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Submit an idea to see trend data.</p>
+                    <p>No trend data available.</p>
                 </CardContent>
             </Card>
         );
     }
 
+    const trendColors = [
+        "bg-sky-500",
+        "bg-amber-500",
+        "bg-emerald-500",
+        "bg-indigo-500",
+        "bg-rose-500",
+    ];
+
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Trend Signals</CardTitle>
+                <CardTitle className="flex items-center"><TrendingUp className="mr-2" /> Trend Signals</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-8">
                 <div>
-                    <h3 className="font-semibold mb-2">Google Trends Interest</h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={data.googleTrends}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="interest" fill="hsl(var(--primary))" />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <h3 className="font-semibold mb-4 text-center">Google Trends Interest</h3>
+                    <div className="flex flex-wrap items-end justify-center gap-6 min-h-[150px]">
+                        {data.googleTrends.map((trend, index) => {
+                            const size = 60 + trend.interest * 1; // Scale size based on interest
+                            const color = trendColors[index % trendColors.length];
+                            return (
+                                <div key={index} className="flex flex-col items-center gap-2">
+                                    <div
+                                        className={`rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg transition-all duration-300 ease-in-out ${color}`}
+                                        style={{ width: `${size}px`, height: `${size}px` }}
+                                        title={`Interest: ${trend.interest}`}
+                                    >
+                                        {trend.interest}
+                                    </div>
+                                    <span className="text-sm font-medium text-muted-foreground">{trend.name}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
                 <div>
                     <h3 className="font-semibold mb-2">Reddit Mentions</h3>
-                     <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={data.redditMentions}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="mentions" fill="hsl(var(--primary))" opacity={0.7} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <ul className="space-y-2">
+                        {data.redditMentions.map((item, index) => (
+                            <li key={index} className="flex justify-between items-center bg-muted p-2 rounded-md">
+                                <span>{item.name}</span>
+                                <span className="font-bold">{item.mentions} mentions</span>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             </CardContent>
         </Card>
