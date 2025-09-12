@@ -11,6 +11,7 @@ import { ThemeProvider } from "./components/theme/theme-provider";
 import MyIdeas from "./pages/MyIdeas";
 import IdeaDetail from "./pages/IdeaDetail";
 import Profile from "./pages/Profile";
+import Payments from "./pages/Payments";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/my-ideas" element={<MyIdeas />} />
               <Route path="/idea/:id" element={<IdeaDetail />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/payments" element={<Payments />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
