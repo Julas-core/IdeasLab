@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { Button } from "./button";
-import { Testimonials } from "../Testimonials";
+import { TestimonialsSectionDemo } from "../TestimonialsDemo";
 
 export function Hero() {
   return (
@@ -44,7 +44,7 @@ export function Hero() {
           </div>
         </div>
       </div>
-      <Testimonials />
+      <TestimonialsSectionDemo />
     </div>
   );
 }
