@@ -3,7 +3,7 @@ import Header from "@/components/layout/Header";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Crown, Paypal } from "lucide-react";
+import { CheckCircle, Crown, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { BGPattern } from "@/components/ui/bg-pattern";
@@ -110,7 +110,7 @@ const Payments = () => {
                   }`}
                   onClick={handlePayPalSubscription}
                 >
-                  <Paypal className="h-5 w-5" />
+                  <CreditCard className="h-5 w-5" />
                   Subscribe with PayPal
                 </Button>
               )}
