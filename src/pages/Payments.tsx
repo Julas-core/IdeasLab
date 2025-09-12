@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -10,9 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { BGPattern } from "@/components/ui/bg-pattern";
-
-// Load Stripe with your publishable key (replace with your actual key)
-const stripePromise = loadStripe("pk_test_51RydjgRxghBL4I5rMfD3fkXmapCeK1rrW7kuaceCJMIMWeYgI1ZGnQqYeTWyGodwLQxK42pcVZ8pZZIXfjSou1r0004fvvVB9z"); // Replace with your Stripe publishable key
+import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
+import { User } from "@supabase/supabase-js";
 
 interface Subscription {
   status: "free" | "pro";
@@ -23,13 +20,36 @@ interface Subscription {
 const Payments = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [{ isPending }] = usePayPalScriptReducer();
+
+  const PRO_PLAN_PRICE = "19.00"; // Example price for Pro plan
 
   useEffect(() => {
     const fetchSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
       if (user) {
-        // Mock subscription for now; in production, query your database
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('subscription_status')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          setSubscription({ status: "free", plan: "Free", price: "$0/month" });
+        } else if (profile) {
+          setSubscription({
+            status: profile.subscription_status === 'pro' ? 'pro' : 'free',
+            plan: profile.subscription_status === 'pro' ? 'Pro' : 'Free',
+            price: profile.subscription_status === 'pro' ? `$${PRO_PLAN_PRICE}/month` : "$0/month",
+          });
+        } else {
+          setSubscription({ status: "free", plan: "Free", price: "$0/month" });
+        }
+      } else {
         setSubscription({ status: "free", plan: "Free", price: "$0/month" });
       }
       setLoading(false);
@@ -38,34 +58,44 @@ const Payments = () => {
     fetchSubscription();
   }, []);
 
-  const handleUpgrade = async () => {
-    setIsCreatingCheckout(true);
+  const createOrder = async (data: Record<string, unknown>, actions: any) => {
     try {
-      // Call the Edge Function to create checkout session
-      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { priceId: "price_12345" }, // Replace with your Stripe Price ID for Pro plan
+      const { data: orderData, error } = await supabase.functions.invoke("create-paypal-order", {
+        body: { amount: PRO_PLAN_PRICE, currency: "USD" },
+      });
+
+      if (error) throw error;
+      return orderData.orderID;
+    } catch (error) {
+      console.error("Error creating PayPal order:", error);
+      showError("Failed to create PayPal order. Please try again.");
+      return actions.reject(); // Reject the order creation
+    }
+  };
+
+  const onApprove = async (data: Record<string, unknown>, actions: any) => {
+    try {
+      if (!user) {
+        showError("You must be logged in to complete the payment.");
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke("capture-paypal-order", {
+        body: { orderID: data.orderID, userId: user.id },
       });
 
       if (error) throw error;
 
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error("Stripe failed to load");
-
-      // Redirect to Stripe Checkout
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId,
-      });
-
-      if (stripeError) throw stripeError;
+      showSuccess("Payment successful! You are now a Pro member.");
+      setSubscription({ status: "pro", plan: "Pro", price: `$${PRO_PLAN_PRICE}/month` });
+      // Optionally redirect or refresh user session
     } catch (error) {
-      console.error("Error creating checkout:", error);
-      showError("Failed to initiate payment. Please try again.");
-    } finally {
-      setIsCreatingCheckout(false);
+      console.error("Error capturing PayPal order:", error);
+      showError("Failed to process payment. Please try again.");
     }
   };
 
-  if (loading) {
+  if (loading || isPending) {
     return (
       <div className="min-h-screen bg-background relative">
         <BGPattern variant="grid" mask="fade-edges" />
@@ -110,16 +140,7 @@ const Payments = () => {
                     <li>• Priority support</li>
                   </ul>
                   {subscription.status === "free" && (
-                    <Button onClick={handleUpgrade} disabled={isCreatingCheckout} className="w-full">
-                      {isCreatingCheckout ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Redirecting to Payment...
-                        </>
-                      ) : (
-                        "Upgrade to Pro"
-                      )}
-                    </Button>
+                    <p className="text-muted-foreground text-sm">Upgrade below to unlock more features.</p>
                   )}
                 </>
               )}
@@ -134,8 +155,8 @@ const Payments = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
-                <p className="text-3xl font-bold">$19</p>
-                <p className="text-sm text-muted-foreground">per month</p>
+                <p className="text-3xl font-bold">${PRO_PLAN_PRICE}</p>
+                <p className="text-sm text-muted-foreground">one-time payment</p>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>• Everything in Free</li>
@@ -143,26 +164,27 @@ const Payments = () => {
                 <li>• Custom AI prompts</li>
                 <li>• Team collaboration</li>
               </ul>
-              <Button onClick={handleUpgrade} disabled={isCreatingCheckout || subscription?.status === "pro"} className="w-full">
-                {isCreatingCheckout ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : subscription?.status === "pro" ? (
-                  "Already on Pro"
-                ) : (
-                  "Get Pro"
-                )}
-              </Button>
+              {subscription?.status === "pro" ? (
+                <Button disabled className="w-full">
+                  Already on Pro
+                </Button>
+              ) : (
+                <PayPalButtons
+                  style={{ layout: "vertical", color: "blue" }}
+                  createOrder={createOrder}
+                  onApprove={onApprove}
+                  onError={(err) => {
+                    console.error("PayPal Buttons Error:", err);
+                    showError("PayPal payment encountered an error. Please try again.");
+                  }}
+                  onCancel={() => {
+                    showError("PayPal payment cancelled.");
+                  }}
+                />
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Stripe Elements Wrapper - Only needed for card payments if you want to expand */}
-        <Elements stripe={stripePromise}>
-          {/* You can add a CardElement form here if needed for direct card input */}
-        </Elements>
       </main>
       <MadeWithDyad />
     </div>
