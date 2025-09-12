@@ -7,12 +7,10 @@ import { CheckCircle, Crown, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { BGPattern } from "@/components/ui/bg-pattern";
-import { useTheme } from "@/hooks/useTheme"; // Import the new useTheme hook
 
 const Payments = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const theme = useTheme(); // Use the theme hook
 
   useEffect(() => {
     const fetchSubscriptionStatus = async () => {
@@ -105,9 +103,7 @@ const Payments = () => {
                 </Button>
               ) : (
                 <Button
-                  className={`w-full flex items-center justify-center gap-2 ${
-                    theme === 'dark' ? 'bg-yellow-400 text-black hover:bg-yellow-500' : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
+                  className="w-full flex items-center justify-center gap-2 bg-yellow-400 text-black hover:bg-yellow-500"
                   onClick={handlePayPalSubscription}
                 >
                   <CreditCard className="h-5 w-5" />

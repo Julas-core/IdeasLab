@@ -1,7 +1,6 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Rocket, LogOut, User, Home, LayoutDashboard, FileText, Settings } from "lucide-react";
-import { ThemeToggle } from "../theme/theme-toggle";
 import { useSupabase } from "@/integrations/supabase";
 import {
   DropdownMenu,
@@ -96,7 +95,6 @@ function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <ThemeToggle />
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

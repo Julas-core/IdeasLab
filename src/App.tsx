@@ -13,7 +13,7 @@ import { ThemeProvider } from "./components/theme/theme-provider";
 function App() {
   return (
     <SessionContextProvider>
-      <ThemeProvider defaultTheme="dark" attribute="class" enableSystem>
+      <ThemeProvider forcedTheme="dark" attribute="class">
         <Toaster />
         <Router>
           <Routes>
