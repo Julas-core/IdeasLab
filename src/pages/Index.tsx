@@ -72,11 +72,13 @@ const Index = () => {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [trendData, setTrendData] = useState<TrendData | null>(null);
   const [fitScore, setFitScore] = useState<number | null>(null);
+  const [isAnalyzingFit, setIsAnalyzingFit] = useState(false);
   const [goToMarketData, setGoToMarketData] = useState<GoToMarketData | null>(null);
 
   useEffect(() => {
     const fetchIdeaOfTheDay = () => {
       setIsLoading(true);
+      setFitScore(null); // Reset fit score for new idea
       // Simulate API call to the edge function
       setTimeout(() => {
         const randomTopic = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
@@ -95,6 +97,19 @@ const Index = () => {
     fetchIdeaOfTheDay();
   }, []);
 
+  const handleAnalyzeFit = (description: string) => {
+    setIsAnalyzingFit(true);
+    setFitScore(null);
+    // Simulate AI analysis
+    setTimeout(() => {
+      // Simple logic: longer description = higher score, plus some randomness
+      const baseScore = Math.min(description.length / 2, 70);
+      const randomFactor = Math.floor(Math.random() * 30);
+      setFitScore(Math.min(Math.round(baseScore + randomFactor), 99));
+      setIsAnalyzingFit(false);
+    }, 1500);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -109,7 +124,7 @@ const Index = () => {
                 <p className="text-muted-foreground">An AI-generated startup concept based on emerging trends.</p>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg:col-span-1 space-y-8">
+                <div className="lg-col-span-1 space-y-8">
                   <Card>
                     <CardHeader>
                       <CardTitle>{currentIdea.idea_title}</CardTitle>
@@ -120,7 +135,12 @@ const Index = () => {
                       <p className="mt-2"><span className="font-semibold">Market: </span>{currentIdea.market}</p>
                     </CardContent>
                   </Card>
-                  <FounderFitQuiz onScoreChange={setFitScore} ideaSubmitted={ideaGenerated} />
+                  <FounderFitQuiz 
+                      onAnalyze={handleAnalyzeFit}
+                      isAnalyzing={isAnalyzingFit}
+                      score={fitScore}
+                      ideaSubmitted={ideaGenerated} 
+                  />
                   <ExportReport 
                       idea={currentIdea}
                       analysis={analysisData}
