@@ -7,65 +7,83 @@ import { FounderFitQuiz } from "@/components/founderfit/FounderFitQuiz";
 import { GoToMarketHelpers, GoToMarketData } from "@/components/gotomarket/GoToMarketHelpers";
 import { ExportReport } from "@/components/export/ExportReport";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-
-// Mock data generation functions
-const generateMockAnalysis = (idea: IdeaFormValues): AnalysisData => ({
-  problem: `A deeper look into the problem of '${idea.problem}'. It seems to affect ${idea.market} significantly.`,
-  opportunity: `There is a huge opportunity to solve this with '${idea.solution}'. The market is ripe for disruption.`,
-  targetAudience: `The primary target audience is ${idea.market}, specifically those who struggle with this daily.`,
-  competitors: "Current competitors are slow and expensive. Key players include LegacyCorp and OldTech Inc.",
-  revenuePotential: "High potential for a subscription-based model, with projected ARR of $5M in 3 years.",
-  risks: "Market adoption could be slow. Technological hurdles may arise.",
-  whyNow: "Recent advancements in technology and a shift in consumer behavior make this the perfect time.",
-});
-
-const generateMockTrends = (idea: IdeaFormValues): TrendData => ({
-    googleTrends: [
-        { name: idea.idea_title.split(" ")[0], interest: Math.floor(Math.random() * 100) },
-        { name: "competitor A", interest: Math.floor(Math.random() * 100) },
-        { name: "competitor B", interest: Math.floor(Math.random() * 100) },
-    ],
-    redditMentions: [
-        { name: idea.idea_title.split(" ")[0], mentions: Math.floor(Math.random() * 500) },
-        { name: "related topic", mentions: Math.floor(Math.random() * 500) },
-    ]
-});
-
-const generateMockGoToMarket = (idea: IdeaFormValues): GoToMarketData => ({
-    landingPageCopy: {
-        headline: `The Ultimate Solution for ${idea.problem}`,
-        subheadline: `With ${idea.idea_title}, you can finally achieve your goals without the hassle.`,
-        cta: "Get Started for Free",
-    },
-    brandNameSuggestions: ["Solutionify", `${idea.idea_title.split(" ")[0]}Hub`, "NextGen Solutions"],
-    adCreativeIdeas: [
-        `A video showing someone struggling with '${idea.problem}' and then finding relief with '${idea.solution}'.`,
-        `A carousel ad on Instagram showcasing key features.`,
-    ]
-});
-
+import { supabase } from "@/integrations/supabase/client";
+import { showLoading, showSuccess, showError, dismissToast } from "@/utils/toast";
 
 const Index = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [ideaSubmitted, setIdeaSubmitted] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<IdeaFormValues | null>(null);
+  const [currentIdeaId, setCurrentIdeaId] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [trendData, setTrendData] = useState<TrendData | null>(null);
   const [fitScore, setFitScore] = useState<number | null>(null);
   const [goToMarketData, setGoToMarketData] = useState<GoToMarketData | null>(null);
 
-  const handleIdeaSubmit = (values: IdeaFormValues) => {
+  const handleIdeaSubmit = async (values: IdeaFormValues) => {
     setIsAnalyzing(true);
-    setCurrentIdea(values);
-    setIdeaSubmitted(prev => !prev); // Toggle to reset quiz
-    
-    // Simulate API calls
-    setTimeout(() => {
-      setAnalysisData(generateMockAnalysis(values));
-      setTrendData(generateMockTrends(values));
-      setGoToMarketData(generateMockGoToMarket(values));
+    const toastId = showLoading("Analyzing your idea...");
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("You must be logged in to submit an idea.");
+
+      const { data: analysisResults, error: functionError } = await supabase.functions.invoke('analyze-idea', {
+        body: values,
+      });
+      if (functionError) throw functionError;
+
+      const ideaToInsert = {
+        user_id: user.id,
+        idea_title: values.idea_title,
+        problem: values.problem,
+        solution: values.solution,
+        market: values.market,
+        analysis: analysisResults.analysis,
+        trend_data: analysisResults.trends,
+        go_to_market: analysisResults.goToMarket,
+      };
+
+      const { data: newIdea, error: insertError } = await supabase
+        .from('ideas')
+        .insert(ideaToInsert)
+        .select('id')
+        .single();
+
+      if (insertError) throw insertError;
+      if (!newIdea) throw new Error("Failed to save the idea.");
+
+      setCurrentIdea(values);
+      setCurrentIdeaId(newIdea.id);
+      setAnalysisData(analysisResults.analysis);
+      setTrendData(analysisResults.trends);
+      setGoToMarketData(analysisResults.goToMarket);
+      setFitScore(null); // Reset fit score for new idea
+      setIdeaSubmitted(prev => !prev);
+
+      showSuccess("Idea analyzed and saved successfully!");
+    } catch (error) {
+      console.error("Error analyzing idea:", error);
+      showError(error instanceof Error ? error.message : "An unknown error occurred.");
+    } finally {
+      dismissToast(toastId);
       setIsAnalyzing(false);
-    }, 1500);
+    }
+  };
+
+  const handleFitScoreChange = async (score: number | null) => {
+    setFitScore(score);
+    if (score !== null && currentIdeaId) {
+      const { error } = await supabase
+        .from('ideas')
+        .update({ fit_score: score })
+        .eq('id', currentIdeaId);
+      
+      if (error) {
+        showError("Failed to save founder fit score.");
+        console.error("Error updating fit score:", error);
+      }
+    }
   };
 
   return (
@@ -75,7 +93,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-1 space-y-8">
             <IdeaForm onSubmit={handleIdeaSubmit} isAnalyzing={isAnalyzing} />
-            {currentIdea && <FounderFitQuiz onScoreChange={setFitScore} ideaSubmitted={ideaSubmitted} />}
+            {currentIdea && <FounderFitQuiz onScoreChange={handleFitScoreChange} ideaSubmitted={ideaSubmitted} />}
             {currentIdea && <ExportReport 
                 idea={currentIdea}
                 analysis={analysisData}
