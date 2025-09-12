@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { AIAnalysis, AnalysisData } from "@/components/ai/AIAnalysis";
 import { TrendSignals, TrendData } from "@/components/trends/TrendSignals";
 import { GoToMarketHelpers, GoToMarketData } from "@/components/gotomarket/GoToMarketHelpers";
@@ -99,7 +98,6 @@ const IdeaDetail = () => {
         <main className="container mx-auto p-4 md:p-8">
           <LoadingSkeleton />
         </main>
-        <MadeWithDyad />
       </div>
     );
   }
@@ -181,7 +179,6 @@ const IdeaDetail = () => {
           </div>
         </div>
       </main>
-      <MadeWithDyad />
     </div>
   );
 };

@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Header from "@/components/layout/Header"; // Corrected import
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from "@/utils/toast";
 import { User } from "@supabase/supabase-js";
 import { BGPattern } from "@/components/ui/bg-pattern";
@@ -153,7 +152,6 @@ const Profile = () => {
           </CardContent>
         </Card>
       </main>
-      <MadeWithDyad />
     </div>
   );
 };
