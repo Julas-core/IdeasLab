@@ -8,15 +8,16 @@ interface FounderFitQuizProps {
   isAnalyzing: boolean;
   score: number | null;
   ideaSubmitted: boolean;
+  initialDescription?: string;
 }
 
-export const FounderFitQuiz = ({ onAnalyze, isAnalyzing, score, ideaSubmitted }: FounderFitQuizProps) => {
-  const [description, setDescription] = useState("");
+export const FounderFitQuiz = ({ onAnalyze, isAnalyzing, score, ideaSubmitted, initialDescription = "" }: FounderFitQuizProps) => {
+  const [description, setDescription] = useState(initialDescription);
 
   useEffect(() => {
-    // Reset the text area when a new idea is generated
-    setDescription("");
-  }, [ideaSubmitted]);
+    // Update description if it comes from profile data after initial render
+    setDescription(initialDescription);
+  }, [initialDescription]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,12 +30,12 @@ export const FounderFitQuiz = ({ onAnalyze, isAnalyzing, score, ideaSubmitted }:
     <Card>
       <CardHeader>
         <CardTitle>Founder Fit Analysis</CardTitle>
-        <CardDescription>Describe your background and skills, and let the AI determine your fit.</CardDescription>
+        <CardDescription>Describe your background and skills to determine your fit. Your description will be saved to your profile.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Textarea
-            placeholder="e.g., I'm a software engineer with 5 years of experience in SaaS. I'm passionate about sustainable tech and have experience leading small teams..."
+            placeholder="e.g., I'm a software engineer with 5 years of experience in SaaS..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={5}

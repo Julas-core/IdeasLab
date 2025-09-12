@@ -1,9 +1,11 @@
-import { Rocket, LogOut } from "lucide-react";
+import { Rocket, LogOut, User as UserIcon, LayoutDashboard, Lightbulb, LogIn } from "lucide-react";
 import { ThemeToggle } from "../theme/theme-toggle";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "../ui/avatar";
 
 export const Header = () => {
   const [user, setUser] = useState<any>(null);
@@ -29,8 +31,13 @@ export const Header = () => {
     navigate('/');
   };
 
+  const getInitials = (email: string) => {
+    if (!email) return "?";
+    return email.substring(0, 2).toUpperCase();
+  }
+
   return (
-    <header className="p-4 border-b bg-card">
+    <header className="p-4 border-b bg-card sticky top-0 z-50">
       <div className="container mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <Rocket className="w-6 h-6" />
@@ -39,14 +46,48 @@ export const Header = () => {
         <div className="flex items-center gap-4">
           <ThemeToggle />
           {user ? (
-            <>
-              <Button variant="outline" onClick={() => navigate('/dashboard')}>Dashboard</Button>
-              <Button variant="ghost" onClick={handleLogout} size="icon" title="Logout">
-                <LogOut className="w-5 h-5" />
-              </Button>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">My Account</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  <span>Dashboard</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/my-ideas')}>
+                  <Lightbulb className="mr-2 h-4 w-4" />
+                  <span>My Ideas</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <Button onClick={() => navigate('/login')}>Login</Button>
+            <Button onClick={() => navigate('/login')}>
+              <LogIn className="mr-2 h-4 w-4" />
+              Login
+            </Button>
           )}
         </div>
       </div>

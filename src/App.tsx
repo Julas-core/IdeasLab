@@ -8,6 +8,10 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./components/theme/theme-provider";
+import MyIdeas from "./pages/MyIdeas";
+import IdeaDetail from "./pages/IdeaDetail";
+import Profile from "./pages/Profile";
+import ProtectedRoute from "./components/layout/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -20,8 +24,15 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/my-ideas" element={<MyIdeas />} />
+              <Route path="/idea/:id" element={<IdeaDetail />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

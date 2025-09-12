@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
+import { User } from "@supabase/supabase-js";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Link } from "react-router-dom";
 
 interface IdeaData {
   idea_title: string;
@@ -20,7 +23,12 @@ interface IdeaData {
   market: string;
 }
 
-const Index = () => {
+interface ProfileData {
+    first_name: string | null;
+    skills_description: string | null;
+}
+
+const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [ideaGenerated, setIdeaGenerated] = useState(false);
@@ -30,14 +38,30 @@ const Index = () => {
   const [fitScore, setFitScore] = useState<number | null>(null);
   const [isAnalyzingFit, setIsAnalyzingFit] = useState(false);
   const [goToMarketData, setGoToMarketData] = useState<GoToMarketData | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
+    const checkUserAndProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('first_name, skills_description')
+          .eq('id', user.id)
+          .single();
+        
+        setProfile(profileData);
+        if (profileData && !profileData.first_name) {
+            setShowProfilePrompt(true);
+        }
+      }
     };
-    checkUser();
+
+    checkUserAndProfile();
     fetchIdeaOfTheDay();
   }, []);
 
@@ -65,6 +89,11 @@ const Index = () => {
   const handleAnalyzeFit = (description: string) => {
     setIsAnalyzingFit(true);
     setFitScore(null);
+    // If the user entered a new description, we can offer to save it to their profile.
+    if (user && description !== profile?.skills_description) {
+        supabase.from('profiles').update({ skills_description: description }).eq('id', user.id).then();
+    }
+
     setTimeout(() => {
       const baseScore = Math.min(description.length / 2, 70);
       const randomFactor = Math.floor(Math.random() * 30);
@@ -147,7 +176,8 @@ const Index = () => {
                       onAnalyze={handleAnalyzeFit}
                       isAnalyzing={isAnalyzingFit}
                       score={fitScore}
-                      ideaSubmitted={ideaGenerated} 
+                      ideaSubmitted={ideaGenerated}
+                      initialDescription={profile?.skills_description || ""}
                   />
                   <ExportReport 
                       idea={currentIdea}
@@ -167,9 +197,25 @@ const Index = () => {
           )
         )}
       </main>
+      <Dialog open={showProfilePrompt} onOpenChange={setShowProfilePrompt}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Welcome to IdeaLab!</DialogTitle>
+                <DialogDescription>
+                    Complete your profile to get the most out of your experience, including more accurate Founder Fit scores.
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setShowProfilePrompt(false)}>Skip for now</Button>
+                <Button asChild>
+                    <Link to="/profile">Complete Profile</Link>
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <MadeWithDyad />
     </div>
   );
 };
 
-export default Index;
+export default Dashboard;
