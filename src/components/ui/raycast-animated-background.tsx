@@ -28,7 +28,7 @@ export const RaycastAnimatedBackground = () => {
   const { width, height } = useWindowSize();
 
   return (
-    <div className={cn("absolute top-0 left-1/2 -translate-x-1/2 z-[-1] mix-blend-screen dark:mix-blend-normal")}>
+    <div className={cn("absolute top-0 left-1/2 -translate-x-1/2 z-[-1]")}>
         <UnicornScene 
           production={true} 
           projectId="cbmTT38A0CcuYxeiyj5H" 
