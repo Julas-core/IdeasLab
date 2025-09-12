@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import { AIAnalysis, AnalysisData } from "@/components/ai/AIAnalysis";
@@ -9,7 +11,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Save } from "lucide-react";
+import { RefreshCw, Save, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { User } from "@supabase/supabase-js";
@@ -195,6 +197,64 @@ const Dashboard = () => {
                   <GoToMarketHelpers data={goToMarketData} />
                 </div>
               </div>
+
+              {/* New Build Your Idea Section */}
+              {currentIdea && (
+                <div className="mt-12">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Build Your Idea</CardTitle>
+                      <CardDescription>
+                        Ready to turn your validated concept into a real app? Use these no-code AI builders to prototype and launch quickly.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                        <a href="https://lovable.dev" target="_blank" rel="noopener noreferrer">
+                          <img src="https://lovable.dev/favicon.ico" alt="Lovable" className="h-4 w-4 rounded" />
+                          <span>Lovable</span>
+                          <ExternalLink className="h-4 w-4 ml-auto" />
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                        <a href="https://leap.new" target="_blank" rel="noopener noreferrer">
+                          <img src="https://leap.new/favicon.ico" alt="Leap" className="h-4 w-4 rounded" />
+                          <span>Leap</span>
+                          <ExternalLink className="h-4 w-4 ml-auto" />
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                        <a href="https://base44.dev" target="_blank" rel="noopener noreferrer">
+                          <img src="https://base44.dev/favicon.ico" alt="Base44" className="h-4 w-4 rounded" />
+                          <span>Base44</span>
+                          <ExternalLink className="h-4 w-4 ml-auto" />
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                        <a href="https://bolt.new" target="_blank" rel="noopener noreferrer">
+                          <img src="https://bolt.new/favicon.ico" alt="Bolt" className="h-4 w-4 rounded" />
+                          <span>Bolt</span>
+                          <ExternalLink className="h-4 w-4 ml-auto" />
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                        <a href="https://v0.dev" target="_blank" rel="noopener noreferrer">
+                          <img src="https://v0.dev/favicon.ico" alt="v0" className="h-4 w-4 rounded" />
+                          <span>v0</span>
+                          <ExternalLink className="h-4 w-4 ml-auto" />
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2 md:col-span-2 lg:col-span-1">
+                        <a href="https://replit.com/ai" target="_blank" rel="noopener noreferrer">
+                          <img src="https://replit.com/favicon.ico" alt="Replit AI" className="h-4 w-4 rounded" />
+                          <span>Replit AI</span>
+                          <ExternalLink className="h-4 w-4 ml-auto" />
+                        </a>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </>
           )
         )}
