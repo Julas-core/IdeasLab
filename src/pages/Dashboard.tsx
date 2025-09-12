@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Link } from "react-router-dom";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { Textarea } from "@/components/ui/textarea";
+import { ProFeatureCard } from "@/components/layout/ProFeatureCard"; // Import ProFeatureCard
 
 interface IdeaData {
   idea_title: string;
@@ -31,6 +32,7 @@ interface IdeaData {
 interface ProfileData {
     first_name: string | null;
     skills_description: string | null;
+    subscription_status: string | null; // Added subscription_status
 }
 
 const Dashboard = () => {
@@ -56,7 +58,7 @@ const Dashboard = () => {
       if (user) {
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('first_name, skills_description')
+          .select('first_name, skills_description, subscription_status') // Fetch subscription_status
           .eq('id', user.id)
           .single();
         
@@ -176,6 +178,7 @@ Key features to include: User authentication, basic dashboard, core functionalit
   };
 
   const prompt = getBuilderPrompt();
+  const isProUser = profile?.subscription_status === 'pro';
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -217,13 +220,20 @@ Key features to include: User authentication, basic dashboard, core functionalit
                       <p className="mt-2"><span className="font-semibold">Market: </span>{currentIdea.market}</p>
                     </CardContent>
                   </Card>
-                  <FounderFitQuiz 
-                      onAnalyze={handleAnalyzeFit}
-                      isAnalyzing={isAnalyzingFit}
-                      score={fitScore}
-                      ideaSubmitted={ideaGenerated}
-                      initialDescription={profile?.skills_description || ""}
-                  />
+                  {isProUser ? (
+                    <FounderFitQuiz 
+                        onAnalyze={handleAnalyzeFit}
+                        isAnalyzing={isAnalyzingFit}
+                        score={fitScore}
+                        ideaSubmitted={ideaGenerated}
+                        initialDescription={profile?.skills_description || ""}
+                    />
+                  ) : (
+                    <ProFeatureCard
+                      title="Unlock Founder Fit Analysis"
+                      description="Describe your background and skills to determine your fit with the idea. Upgrade to Pro to access this feature."
+                    />
+                  )}
                   <ExportReport 
                       idea={currentIdea}
                       analysis={analysisData}
@@ -234,13 +244,27 @@ Key features to include: User authentication, basic dashboard, core functionalit
                 </div>
                 <div className="lg:col-span-2 space-y-8">
                   <AIAnalysis data={analysisData} />
-                  <TrendSignals data={trendData} />
-                  <GoToMarketHelpers data={goToMarketData} />
+                  {isProUser ? (
+                    <TrendSignals data={trendData} />
+                  ) : (
+                    <ProFeatureCard
+                      title="Unlock Trend Signals"
+                      description="See real-time market trends and data-driven analysis for each idea. Upgrade to Pro to access this feature."
+                    />
+                  )}
+                  {isProUser ? (
+                    <GoToMarketHelpers data={goToMarketData} />
+                  ) : (
+                    <ProFeatureCard
+                      title="Unlock Go-to-Market Helpers"
+                      description="Get AI-generated landing page copy, brand name suggestions, and ad creative ideas. Upgrade to Pro to access this feature."
+                    />
+                  )}
                 </div>
               </div>
 
               {/* New Interactive Build Section with Animation */}
-              {currentIdea && (
+              {isProUser ? (
                 <div className="mt-12">
                   <Card>
                     <CardHeader>
@@ -343,6 +367,13 @@ Key features to include: User authentication, basic dashboard, core functionalit
                       </AnimatePresence>
                     </CardContent>
                   </Card>
+                </div>
+              ) : (
+                <div className="mt-12">
+                  <ProFeatureCard
+                    title="Ready to Build? Upgrade to Pro!"
+                    description="Unlock the ability to generate prompts for AI builders and kickstart your development process. Upgrade to Pro to access this feature."
+                  />
                 </div>
               )}
             </>
