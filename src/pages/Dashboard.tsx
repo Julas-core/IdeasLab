@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/layout/Header";
 import { AIAnalysis, AnalysisData } from "@/components/ai/AIAnalysis";
 import { TrendSignals, TrendData } from "@/components/trends/TrendSignals";
@@ -11,13 +12,14 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Save, ExternalLink } from "lucide-react";
+import { RefreshCw, Save, ExternalLink, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 import { BGPattern } from "@/components/ui/bg-pattern";
+import { Textarea } from "@/components/ui/textarea";
 
 interface IdeaData {
   idea_title: string;
@@ -44,6 +46,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const [showBuilders, setShowBuilders] = useState(false);
 
   useEffect(() => {
     const checkUserAndProfile = async () => {
@@ -71,6 +74,7 @@ const Dashboard = () => {
   const fetchIdeaOfTheDay = async () => {
     setIsLoading(true);
     setFitScore(null);
+    setShowBuilders(false); // Reset builders view when generating new idea
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-idea');
@@ -136,7 +140,34 @@ const Dashboard = () => {
     }
   };
 
-  // Construct prompt for AI builders based on current idea
+  // Generate full prompt text for copying
+  const getFullPrompt = () => {
+    if (!currentIdea) return '';
+    return `Build a startup app for "${currentIdea.idea_title}".
+
+Problem: ${currentIdea.problem}
+
+Solution: ${currentIdea.solution}
+
+Target market: ${currentIdea.market}
+
+Key features to include: User authentication, basic dashboard, core functionality to solve the problem, and simple UI/UX. Make it scalable and modern using React or similar.`;
+  };
+
+  const fullPrompt = getFullPrompt();
+
+  const handleCopyAndOpenBuilders = async () => {
+    try {
+      await navigator.clipboard.writeText(fullPrompt);
+      showSuccess("Prompt copied to clipboard! Now opening builders...");
+      setShowBuilders(true);
+    } catch (err) {
+      showError("Failed to copy prompt. Please copy manually.");
+      setShowBuilders(true);
+    }
+  };
+
+  // Construct encoded prompt for any direct URL params (fallback for builders that support it)
   const getBuilderPrompt = () => {
     if (!currentIdea) return '';
     return encodeURIComponent(
@@ -208,59 +239,108 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* New Build Your Idea Section */}
+              {/* New Interactive Build Section with Animation */}
               {currentIdea && (
                 <div className="mt-12">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Build Your Idea</CardTitle>
+                      <CardTitle>Ready to Build?</CardTitle>
                       <CardDescription>
-                        Ready to turn your validated concept into a real app? Use these no-code AI builders to prototype and launch quickly. (Prompts pre-filled with your idea details!)
+                        First, here's a complete prompt for your idea. Copy it and paste into any AI builder. Then open the builders below.
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href={`https://lovable.dev?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                          <img src="https://lovable.dev/favicon.ico" alt="Lovable" className="h-4 w-4 rounded" />
-                          <span>Lovable</span>
-                          <ExternalLink className="h-4 w-4 ml-auto" />
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href={`https://leap.new?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                          <img src="https://leap.new/favicon.ico" alt="Leap" className="h-4 w-4 rounded" />
-                          <span>Leap</span>
-                          <ExternalLink className="h-4 w-4 ml-auto" />
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href={`https://base44.dev?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                          <img src="https://base44.dev/favicon.ico" alt="Base44" className="h-4 w-4 rounded" />
-                          <span>Base44</span>
-                          <ExternalLink className="h-4 w-4 ml-auto" />
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href={`https://bolt.new?q=${prompt}`} target="_blank" rel="noopener noreferrer">
-                          <img src="https://bolt.new/favicon.ico" alt="Bolt" className="h-4 w-4 rounded" />
-                          <span>Bolt</span>
-                          <ExternalLink className="h-4 w-4 ml-auto" />
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                        <a href={`https://v0.dev/new?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                          <img src="https://v0.dev/favicon.ico" alt="v0" className="h-4 w-4 rounded" />
-                          <span>v0</span>
-                          <ExternalLink className="h-4 w-4 ml-auto" />
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild className="justify-start space-x-2 md:col-span-2 lg:col-span-1">
-                        <a href={`https://replit.com/ai?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                          <img src="https://replit.com/favicon.ico" alt="Replit AI" className="h-4 w-4 rounded" />
-                          <span>Replit AI</span>
-                          <ExternalLink className="h-4 w-4 ml-auto" />
-                        </a>
-                      </Button>
+                    <CardContent className="space-y-6">
+                      <AnimatePresence mode="wait">
+                        {!showBuilders ? (
+                          <motion.div
+                            key="prompt"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <div className="space-y-4">
+                              <Textarea
+                                value={fullPrompt}
+                                readOnly
+                                rows={8}
+                                placeholder="Your prompt will appear here..."
+                                className="font-mono text-sm bg-muted/50 resize-none"
+                              />
+                              <Button onClick={handleCopyAndOpenBuilders} className="w-full" variant="secondary">
+                                <Copy className="mr-2 h-4 w-4" />
+                                Copy Prompt & Open Builders
+                              </Button>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="builders"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                          >
+                            <div className="space-y-4">
+                              <p className="text-sm text-muted-foreground">Prompt copied! Now choose a builder to start prototyping (you can paste the prompt if needed).</p>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                                  <a href={`https://lovable.dev?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
+                                    <img src="https://lovable.dev/favicon.ico" alt="Lovable" className="h-4 w-4 rounded" />
+                                    <span>Lovable</span>
+                                    <ExternalLink className="h-4 w-4 ml-auto" />
+                                  </a>
+                                </Button>
+                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                                  <a href={`https://leap.new?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
+                                    <img src="https://leap.new/favicon.ico" alt="Leap" className="h-4 w-4 rounded" />
+                                    <span>Leap</span>
+                                    <ExternalLink className="h-4 w-4 ml-auto" />
+                                  </a>
+                                </Button>
+                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                                  <a href={`https://base44.dev?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
+                                    <img src="https://base44.dev/favicon.ico" alt="Base44" className="h-4 w-4 rounded" />
+                                    <span>Base44</span>
+                                    <ExternalLink className="h-4 w-4 ml-auto" />
+                                  </a>
+                                </Button>
+                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                                  <a href={`https://bolt.new?q=${prompt}`} target="_blank" rel="noopener noreferrer">
+                                    <img src="https://bolt.new/favicon.ico" alt="Bolt" className="h-4 w-4 rounded" />
+                                    <span>Bolt</span>
+                                    <ExternalLink className="h-4 w-4 ml-auto" />
+                                  </a>
+                                </Button>
+                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
+                                  <a href={`https://v0.dev/new?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
+                                    <img src="https://v0.dev/favicon.ico" alt="v0" className="h-4 w-4 rounded" />
+                                    <span>v0</span>
+                                    <ExternalLink className="h-4 w-4 ml-auto" />
+                                  </a>
+                                </Button>
+                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2 md:col-span-2 lg:col-span-1">
+                                  <a href={`https://replit.com/ai?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
+                                    <img src="https://replit.com/favicon.ico" alt="Replit AI" className="h-4 w-4 rounded" />
+                                    <span>Replit AI</span>
+                                    <ExternalLink className="h-4 w-4 ml-auto" />
+                                  </a>
+                                </Button>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                onClick={() => {
+                                  setShowBuilders(false);
+                                  // Optionally recopy the prompt
+                                  navigator.clipboard.writeText(fullPrompt);
+                                }}
+                                className="w-full"
+                              >
+                                Back to Prompt
+                              </Button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </CardContent>
                   </Card>
                 </div>
