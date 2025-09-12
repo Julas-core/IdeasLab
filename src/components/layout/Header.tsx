@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Rocket, LogOut, User, Home } from "lucide-react";
 import { ThemeToggle } from "../theme/theme-toggle";
-import { useSupabase } from "@/integrations/supabase"; // Corrected import path
+import { useSupabase } from "@/integrations/supabase";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,7 +51,7 @@ function Header() {
   }, [location.pathname, session]);
 
   return (
-    <header className="p-4 border-b bg-card sticky top-0 z-50">
+    <header className="p-4 sticky top-0 z-50 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex items-center justify-between relative">
         <Link to="/" className="flex items-center gap-2">
           <Rocket className="w-6 h-6" />
