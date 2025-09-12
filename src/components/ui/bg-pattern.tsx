@@ -57,8 +57,8 @@ const BGPattern = ({
 	variant = 'grid',
 	mask = 'none',
 	size = 32,
-	fill: lightFill = '#111827', // gray-900
-	darkFill = '#3f3f46', // zinc-700
+	fill: lightFill = '#d4d4d8', // zinc-300
+	darkFill = '#27272a', // zinc-800
 	className,
 	style,
 	...props
