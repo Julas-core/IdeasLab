@@ -16,7 +16,7 @@ interface ExportReportProps {
     idea: IdeaData | null;
     analysis: AnalysisData | null;
     trends: TrendData | null;
-    fitScore: number | null;
+    fitScore: number | null; // Changed from fit_score to fitScore
     goToMarket: GoToMarketData | null;
 }
 

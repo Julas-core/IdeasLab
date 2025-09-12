@@ -1,6 +1,7 @@
-import Header from "@/components/layout/Header"; // Corrected import
+import Header from "@/components/layout/Header";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Hero } from "@/components/ui/animated-hero";
+import { Features } from "@/components/blocks/Features"; // Import the new Features component
 
 const Landing = () => {
   return (
@@ -8,6 +9,7 @@ const Landing = () => {
       <Header />
       <main>
         <Hero />
+        <Features /> {/* Use the new Features component here */}
       </main>
       <MadeWithDyad />
     </div>

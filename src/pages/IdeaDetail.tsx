@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Header from "@/components/layout/Header"; // Corrected import
+import Header from "@/components/layout/Header";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { AIAnalysis, AnalysisData } from "@/components/ai/AIAnalysis";
 import { TrendSignals, TrendData } from "@/components/trends/TrendSignals";
@@ -140,7 +140,7 @@ const IdeaDetail = () => {
                 idea={idea}
                 analysis={idea.analysis}
                 trends={idea.trend_data}
-                fit_score={idea.fit_score}
+                fitScore={idea.fit_score} // Corrected prop name
                 goToMarket={idea.go_to_market}
             />
           </div>
