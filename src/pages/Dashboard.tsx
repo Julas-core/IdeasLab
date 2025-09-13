@@ -12,7 +12,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Save, ExternalLink, Copy, FileText } from "lucide-react";
+import { Save, ExternalLink, Copy, FileText, RefreshCw } from "lucide-react"; // Added RefreshCw icon
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { User } from "@supabase/supabase-js";
@@ -80,13 +80,15 @@ const Dashboard = () => {
     checkUserAndProfile();
   }, []);
 
-  const fetchDailyIdea = async () => {
+  const fetchDailyIdea = async (forceNew = false) => { // Added forceNew parameter
     setIsLoading(true);
     setFitScore(null);
     setShowBuilders(false);
     
     try {
-      const { data, error } = await supabase.functions.invoke('get-daily-idea');
+      const { data, error } = await supabase.functions.invoke('get-daily-idea', {
+        body: { forceNew: forceNew } // Pass forceNew to the Edge Function
+      });
       if (error) throw error;
 
       setCurrentIdea(data.idea);
@@ -206,6 +208,10 @@ Key features to include: User authentication, basic dashboard, core functionalit
                   <p className="text-muted-foreground">An AI-generated startup concept based on emerging trends.</p>
                 </div>
                 <div className="flex gap-2">
+                  <Button onClick={() => fetchDailyIdea(true)} disabled={isLoading}> {/* New button */}
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Generate New Idea
+                  </Button>
                   {isProUser ? (
                     <Button asChild>
                       <Link to="/my-ideas">
@@ -336,37 +342,34 @@ Key features to include: User authentication, basic dashboard, core functionalit
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: 0.1 }}
                           >
-                            <div className="space-y-4">
-                              <p className="text-sm text-muted-foreground">Prompt copied! Now choose a builder to start prototyping.</p>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                {[
-                                  { name: 'Lovable', domain: 'lovable.dev' },
-                                  { name: 'Leap', domain: 'leap.new' },
-                                  { name: 'Base44', domain: 'base44.dev' },
-                                  { name: 'Bolt', domain: 'bolt.new' },
-                                  { name: 'v0', domain: 'v0.dev' },
-                                  { name: 'Replit AI', domain: 'replit.com' },
-                                ].map(builder => (
-                                  <Button key={builder.name} variant="outline" asChild className="justify-start space-x-2">
-                                    <a href={`https://${builder.domain}?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                                      <img src={`https://icon.horse/icon/${builder.domain}`} alt={builder.name} className="h-4 w-4 rounded" />
-                                      <span>{builder.name}</span>
-                                      <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />
-                                    </a>
-                                  </Button>
-                                ))}
-                              </div>
-                              <Button
-                                variant="ghost"
-                                onClick={() => {
-                                  setShowBuilders(false);
-                                  navigator.clipboard.writeText(fullPrompt);
-                                }}
-                                className="w-full"
-                              >
-                                Back to Prompt
-                              </Button>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                              {[
+                                { name: 'Lovable', domain: 'lovable.dev' },
+                                { name: 'Leap', domain: 'leap.new' },
+                                { name: 'Base44', domain: 'base44.dev' },
+                                { name: 'Bolt', domain: 'bolt.new' },
+                                { name: 'v0', domain: 'v0.dev' },
+                                { name: 'Replit AI', domain: 'replit.com' },
+                              ].map(builder => (
+                                <Button key={builder.name} variant="outline" asChild className="justify-start space-x-2">
+                                  <a href={`https://${builder.domain}?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
+                                    <img src={`https://icon.horse/icon/${builder.domain}`} alt={builder.name} className="h-4 w-4 rounded" />
+                                    <span>{builder.name}</span>
+                                    <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />
+                                  </a>
+                                </Button>
+                              ))}
                             </div>
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                setShowBuilders(false);
+                                navigator.clipboard.writeText(fullPrompt);
+                              }}
+                              className="w-full"
+                            >
+                              Back to Prompt
+                            </Button>
                           </motion.div>
                         )}
                       </AnimatePresence>

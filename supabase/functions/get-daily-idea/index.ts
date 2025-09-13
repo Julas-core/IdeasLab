@@ -17,6 +17,12 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")! // Use service role key for database operations
     );
 
+    let forceNew = false;
+    if (req.method === 'POST') {
+      const requestBody = await req.json();
+      forceNew = requestBody.forceNew || false;
+    }
+
     // 1. Try to fetch the latest idea generated within the last 24 hours
     const { data: latestIdea, error: fetchError } = await supabase
       .from('daily_ideas')
@@ -43,11 +49,17 @@ serve(async (req) => {
     }
 
     // 2. If no fresh idea, generate a new one
-    if (!ideaToReturn) {
+    //    OR if forceNew is true, generate a new one regardless
+    if (forceNew || !ideaToReturn) {
       console.log("Generating a new idea of the day...");
       // Invoke the existing generate-idea Edge Function
       const { data: newIdeaData, error: generateError } = await supabase.functions.invoke('generate-idea');
       if (generateError) throw generateError;
+
+      // Delete old daily idea if forcing a new one, to keep only one "daily" idea
+      if (forceNew && latestIdea) {
+        await supabase.from('daily_ideas').delete().eq('id', latestIdea.id);
+      }
 
       // Store the new idea in the database
       const { error: insertError } = await supabase
