@@ -69,60 +69,31 @@ const Dashboard = () => {
         }
       }
     };
-
-    const initializeIdea = () => {
-        const storedIdeaString = localStorage.getItem('dailyIdea');
-        const storedTimestamp = localStorage.getItem('dailyIdeaTimestamp');
-
-        if (storedIdeaString && storedTimestamp) {
-            const idea = JSON.parse(storedIdeaString);
-            const timestamp = new Date(storedTimestamp);
-            const now = new Date();
-            const hoursDiff = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60);
-
-            if (hoursDiff < 24) {
-                setCurrentIdea(idea.currentIdea);
-                setAnalysisData(idea.analysisData);
-                setTrendData(idea.trendData);
-                setGoToMarketData(idea.goToMarketData);
-                setIdeaGenerated(prev => !prev);
-                setIsLoading(false);
-                return;
-            }
-        }
-        fetchIdeaOfTheDay();
-    };
     
-    checkUserAndProfile();
-    initializeIdea();
+    fetchDailyIdea(); // Fetch the daily idea first
+    checkUserAndProfile(); // Then check user and profile
   }, []);
 
-  const fetchIdeaOfTheDay = async () => {
+  const fetchDailyIdea = async () => { // Renamed from fetchIdeaOfTheDay
     setIsLoading(true);
     setFitScore(null);
     setShowBuilders(false);
     
     try {
-      const { data, error } = await supabase.functions.invoke('generate-idea');
+      // Invoke the new get-daily-idea Edge Function
+      const { data, error } = await supabase.functions.invoke('get-daily-idea');
       if (error) throw error;
 
-      const ideaToCache = {
-        currentIdea: data.idea,
-        analysisData: data.analysis,
-        trendData: data.trends,
-        goToMarketData: data.goToMarket,
-      };
-      localStorage.setItem('dailyIdea', JSON.stringify(ideaToCache));
-      localStorage.setItem('dailyIdeaTimestamp', new Date().toISOString());
-
+      // The data structure from get-daily-idea should match the combined structure
+      // of idea, analysis, trends, goToMarket
       setCurrentIdea(data.idea);
       setAnalysisData(data.analysis);
       setTrendData(data.trends);
       setGoToMarketData(data.goToMarket);
       setIdeaGenerated(prev => !prev);
     } catch (error) {
-      console.error("Error fetching new idea:", error);
-      showError("Failed to generate a new idea. Please try again.");
+      console.error("Error fetching daily idea:", error);
+      showError("Failed to load the idea of the day. Please try again.");
     } finally {
       setIsLoading(false);
     }
