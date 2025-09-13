@@ -11,63 +11,61 @@ serve(async (req) => {
   }
 
   try {
-    const openrouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
-    if (!openrouterApiKey) {
-      throw new Error("OpenRouter API key is not set in Supabase secrets.");
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!geminiApiKey) {
+      throw new Error("GEMINI_API_KEY is not set in Supabase secrets.");
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const prompt = `You are an expert startup analyst. Your task is to generate a novel startup idea based on current, real-world trends. You must provide the output in a structured JSON format.
+
+    The JSON object should have the following keys: "idea", "analysis", "trends", and "goToMarket".
+
+    1.  **idea**: An object with "idea_title", "problem", "solution", and "market".
+        -   "idea_title": A catchy name for the startup.
+        -   "problem": A concise description of a real problem people are facing, based on a current trend.
+        -   "solution": A clear, innovative solution to that problem.
+        -   "market": The target audience or market for this solution.
+
+    2.  **analysis**: An object with "problem", "opportunity", "targetAudience", "competitors", "revenuePotential", "risks", and "whyNow".
+        -   Provide a detailed breakdown for each field. "whyNow" should explain why this idea is timely.
+
+    3.  **trends**: An object with "googleTrends" and "redditMentions".
+        -   "googleTrends": An array of 3 objects, each with "name" (a relevant search term) and "interest" (a score from 0-100).
+        -   "redditMentions": An array of 2 objects, each with "name" (a relevant subreddit or topic) and "mentions" (an estimated number of recent mentions).
+
+    4.  **goToMarket**: An object with "landingPageCopy", "brandNameSuggestions", and "adCreativeIdeas".
+        -   "landingPageCopy": An object with "headline", "subheadline", and "cta".
+        -   "brandNameSuggestions": An array of 3 creative brand names.
+        -   "adCreativeIdeas": An array of 2 distinct ad ideas.
+
+    Generate a high-quality, plausible, and interesting startup concept. Ensure the final output is a single, valid JSON object. The user will now ask for an idea.`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openrouterApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "mistralai/mixtral-8x7b-instruct-v0.1", // Switched to a highly reliable model
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert startup analyst. Your task is to generate a novel startup idea based on current, real-world trends. You must provide the output in a structured JSON format.
-
-            The JSON object should have the following keys: "idea", "analysis", "trends", and "goToMarket".
-
-            1.  **idea**: An object with "idea_title", "problem", "solution", and "market".
-                -   "idea_title": A catchy name for the startup.
-                -   "problem": A concise description of a real problem people are facing, based on a current trend.
-                -   "solution": A clear, innovative solution to that problem.
-                -   "market": The target audience or market for this solution.
-
-            2.  **analysis**: An object with "problem", "opportunity", "targetAudience", "competitors", "revenuePotential", "risks", and "whyNow".
-                -   Provide a detailed breakdown for each field. "whyNow" should explain why this idea is timely.
-
-            3.  **trends**: An object with "googleTrends" and "redditMentions".
-                -   "googleTrends": An array of 3 objects, each with "name" (a relevant search term) and "interest" (a score from 0-100).
-                -   "redditMentions": An array of 2 objects, each with "name" (a relevant subreddit or topic) and "mentions" (an estimated number of recent mentions).
-
-            4.  **goToMarket**: An object with "landingPageCopy", "brandNameSuggestions", and "adCreativeIdeas".
-                -   "landingPageCopy": An object with "headline", "subheadline", and "cta".
-                -   "brandNameSuggestions": An array of 3 creative brand names.
-                -   "adCreativeIdeas": An array of 2 distinct ad ideas.
-
-            Generate a high-quality, plausible, and interesting startup concept. Ensure the final output is a single, valid JSON object.`,
-          },
-          {
-            role: "user",
-            content: "Generate a new startup idea.",
-          },
-        ],
+        contents: [{
+          parts: [
+            { text: prompt },
+            { text: "Generate a new startup idea." }
+          ]
+        }],
+        generationConfig: {
+          response_mime_type: "application/json",
+        }
       }),
     });
 
     if (!response.ok) {
         const errorBody = await response.text();
-        console.error(`OpenRouter API error: ${response.status} ${response.statusText}`, errorBody);
-        throw new Error(`OpenRouter API error: ${response.statusText} - ${errorBody}`);
+        console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorBody);
+        throw new Error(`Gemini API error: ${response.statusText} - ${errorBody}`);
     }
 
     const completion = await response.json();
-    const responseData = JSON.parse(completion.choices[0].message.content);
+    const responseData = JSON.parse(completion.candidates[0].content.parts[0].text);
 
     return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
