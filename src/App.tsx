@@ -5,10 +5,12 @@ import Login from "./pages/Login";
 import MyIdeas from "./pages/MyIdeas";
 import IdeaDetail from "./pages/IdeaDetail";
 import Profile from "./pages/Profile";
-import Payments from "./pages/Payments"; // Import the new Payments page
+import Payments from "./pages/Payments";
+import NotFound from "./pages/NotFound"; // Import NotFound page
 import { Toaster } from "sonner";
 import { SessionContextProvider } from "./integrations/supabase/session-context";
 import { ThemeProvider } from "./components/theme/theme-provider";
+import ProtectedRoute from "./components/layout/ProtectedRoute"; // Import ProtectedRoute
 
 function App() {
   return (
@@ -18,12 +20,19 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/my-ideas" element={<MyIdeas />} />
-            <Route path="/idea/:id" element={<IdeaDetail />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/payments" element={<Payments />} /> {/* New Payments route */}
+            
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/my-ideas" element={<MyIdeas />} />
+              <Route path="/idea/:id" element={<IdeaDetail />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/payments" element={<Payments />} />
+            </Route>
+
+            {/* Catch-all route for 404 Not Found */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
       </ThemeProvider>
