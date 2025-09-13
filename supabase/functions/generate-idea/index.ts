@@ -18,16 +18,16 @@ serve(async (req) => {
 
     const prompt = `You are an expert startup analyst. Your task is to generate a novel startup idea based on current, real-world trends. You must provide the output in a structured JSON format.
 
-    The JSON object should have the following keys: "idea", "analysis", "trends", and "goToMarket".
+    The JSON object should have the following keys: "idea", "analysis", "trends", "goToMarket", "idea_attributes", "idea_health_metrics", and "value_ladder".
 
     1.  **idea**: An object with "idea_title", "problem", "solution", and "market".
         -   "idea_title": A catchy name for the startup.
-        -   "problem": A concise description of a real problem people are facing, based on a current trend.
+        -   "problem": A concise description of a real problem people are facing.
         -   "solution": A clear, innovative solution to that problem.
         -   "market": The target audience or market for this solution.
 
     2.  **analysis**: An object with "problem", "opportunity", "targetAudience", "competitors", "revenuePotential", "risks", and "whyNow".
-        -   Provide a detailed breakdown for each field. "whyNow" should explain why this idea is timely.
+        -   Provide a detailed breakdown for each field.
 
     3.  **trends**: An object with "googleTrends" and "redditMentions".
         -   "googleTrends": An array of 3 objects, each with "name" (a relevant search term) and "interest" (a score from 0-100).
@@ -37,6 +37,15 @@ serve(async (req) => {
         -   "landingPageCopy": An object with "headline", "subheadline", and "cta".
         -   "brandNameSuggestions": An array of 3 creative brand names.
         -   "adCreativeIdeas": An array of 2 distinct ad ideas.
+
+    5.  **idea_attributes**: An object with three keys: "timing", "advantage", and "quality".
+        -   For each key, provide a short, catchy phrase (e.g., "Perfect Timing", "Unfair Advantage", "10x Better Solution").
+
+    6.  **idea_health_metrics**: An object with four keys: "opportunity", "feasibility", "marketSize", and "whyNow".
+        -   For each key, provide a numerical score from 0 to 100.
+
+    7.  **value_ladder**: An array of 3 objects, each representing a product tier. Each object should have "name", "description", and "price".
+        -   Example tiers: "Freebie", "Core Offer", "Premium Subscription".
 
     Generate a high-quality, plausible, and interesting startup concept. Ensure the final output is a single, valid JSON object. The user will now ask for an idea.`;
 

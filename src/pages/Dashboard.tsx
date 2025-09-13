@@ -22,6 +22,9 @@ import { BGPattern } from "@/components/ui/bg-pattern";
 import { Textarea } from "@/components/ui/textarea";
 import { ProFeatureCard } from "@/components/layout/ProFeatureCard";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { IdeaAttributes, IdeaAttributesData } from "@/components/ideas/IdeaAttributes";
+import { IdeaHealthMetrics, IdeaHealthMetricsData } from "@/components/ideas/IdeaHealthMetrics";
+import { ValueLadder, ValueLadderItem } from "@/components/ideas/ValueLadder";
 
 interface IdeaData {
   idea_title: string;
@@ -46,6 +49,9 @@ const Dashboard = () => {
   const [fitScore, setFitScore] = useState<number | null>(null);
   const [isAnalyzingFit, setIsAnalyzingFit] = useState(false);
   const [goToMarketData, setGoToMarketData] = useState<GoToMarketData | null>(null);
+  const [ideaAttributes, setIdeaAttributes] = useState<IdeaAttributesData | null>(null);
+  const [ideaHealthMetrics, setIdeaHealthMetrics] = useState<IdeaHealthMetricsData | null>(null);
+  const [valueLadder, setValueLadder] = useState<ValueLadderItem[] | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
@@ -70,26 +76,26 @@ const Dashboard = () => {
       }
     };
     
-    fetchDailyIdea(); // Fetch the daily idea first
-    checkUserAndProfile(); // Then check user and profile
+    fetchDailyIdea();
+    checkUserAndProfile();
   }, []);
 
-  const fetchDailyIdea = async () => { // Renamed from fetchIdeaOfTheDay
+  const fetchDailyIdea = async () => {
     setIsLoading(true);
     setFitScore(null);
     setShowBuilders(false);
     
     try {
-      // Invoke the new get-daily-idea Edge Function
       const { data, error } = await supabase.functions.invoke('get-daily-idea');
       if (error) throw error;
 
-      // The data structure from get-daily-idea should match the combined structure
-      // of idea, analysis, trends, goToMarket
       setCurrentIdea(data.idea);
       setAnalysisData(data.analysis);
       setTrendData(data.trends);
       setGoToMarketData(data.goToMarket);
+      setIdeaAttributes(data.idea_attributes);
+      setIdeaHealthMetrics(data.idea_health_metrics);
+      setValueLadder(data.value_ladder);
       setIdeaGenerated(prev => !prev);
     } catch (error) {
       console.error("Error fetching daily idea:", error);
@@ -133,6 +139,9 @@ const Dashboard = () => {
         trend_data: trendData,
         go_to_market: goToMarketData,
         fit_score: fitScore,
+        idea_attributes: ideaAttributes,
+        idea_health_metrics: ideaHealthMetrics,
+        value_ladder: valueLadder,
       });
 
       if (error) throw error;
@@ -201,7 +210,7 @@ Key features to include: User authentication, basic dashboard, core functionalit
                     <Button asChild>
                       <Link to="/my-ideas">
                         <FileText className="mr-2 h-4 w-4" />
-                        Previous Ideas
+                        My Saved Ideas
                       </Link>
                     </Button>
                   ) : (
@@ -210,7 +219,7 @@ Key features to include: User authentication, basic dashboard, core functionalit
                         <TooltipTrigger asChild>
                           <Button disabled>
                             <FileText className="mr-2 h-4 w-4" />
-                            Previous Ideas
+                            My Saved Ideas
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -231,6 +240,9 @@ Key features to include: User authentication, basic dashboard, core functionalit
                 <div className="lg:col-span-1 space-y-8">
                   <Card>
                     <CardHeader>
+                      <div className="mb-2">
+                        <IdeaAttributes data={ideaAttributes} />
+                      </div>
                       <CardTitle>{currentIdea.idea_title}</CardTitle>
                       <CardDescription>{currentIdea.problem}</CardDescription>
                     </CardHeader>
@@ -239,6 +251,7 @@ Key features to include: User authentication, basic dashboard, core functionalit
                       <p className="mt-2"><span className="font-semibold">Market: </span>{currentIdea.market}</p>
                     </CardContent>
                   </Card>
+                  <IdeaHealthMetrics data={ideaHealthMetrics} />
                   {isProUser ? (
                     <FounderFitQuiz 
                         onAnalyze={handleAnalyzeFit}
@@ -253,13 +266,6 @@ Key features to include: User authentication, basic dashboard, core functionalit
                       description="Describe your background and skills to determine your fit with the idea. Upgrade to Pro to access this feature."
                     />
                   )}
-                  <ExportReport 
-                      idea={currentIdea}
-                      analysis={analysisData}
-                      trends={trendData}
-                      fitScore={fitScore}
-                      goToMarket={goToMarketData}
-                  />
                 </div>
                 <div className="lg:col-span-2 space-y-8">
                   <AIAnalysis data={analysisData} />
@@ -269,6 +275,14 @@ Key features to include: User authentication, basic dashboard, core functionalit
                     <ProFeatureCard
                       title="Unlock Trend Signals"
                       description="See real-time market trends and data-driven analysis for each idea. Upgrade to Pro to access this feature."
+                    />
+                  )}
+                  {isProUser ? (
+                    <ValueLadder data={valueLadder} />
+                  ) : (
+                     <ProFeatureCard
+                      title="Unlock Value Ladder"
+                      description="See potential monetization strategies and product tiers for this idea. Upgrade to Pro to access this feature."
                     />
                   )}
                   {isProUser ? (
@@ -323,50 +337,24 @@ Key features to include: User authentication, basic dashboard, core functionalit
                             transition={{ duration: 0.3, delay: 0.1 }}
                           >
                             <div className="space-y-4">
-                              <p className="text-sm text-muted-foreground">Prompt copied! Now choose a builder to start prototyping (you can paste the prompt if needed).</p>
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                                  <a href={`https://lovable.dev?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                                    <img src="https://lovable.dev/favicon.ico" alt="Lovable" className="h-4 w-4 rounded" />
-                                    <span>Lovable</span>
-                                    <ExternalLink className="h-4 w-4 ml-auto" />
-                                  </a>
-                                </Button>
-                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                                  <a href={`https://leap.new?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                                    <img src="https://leap.new/favicon.ico" alt="Leap" className="h-4 w-4 rounded" />
-                                    <span>Leap</span>
-                                    <ExternalLink className="h-4 w-4 ml-auto" />
-                                  </a>
-                                </Button>
-                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                                  <a href={`https://base44.dev?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                                    <img src="https://base44.dev/favicon.ico" alt="Base44" className="h-4 w-4 rounded" />
-                                    <span>Base44</span>
-                                    <ExternalLink className="h-4 w-4 ml-auto" />
-                                  </a>
-                                </Button>
-                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                                  <a href={`https://bolt.new?q=${prompt}`} target="_blank" rel="noopener noreferrer">
-                                    <img src="https://bolt.new/favicon.ico" alt="Bolt" className="h-4 w-4 rounded" />
-                                    <span>Bolt</span>
-                                    <ExternalLink className="h-4 w-4 ml-auto" />
-                                  </a>
-                                </Button>
-                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2">
-                                  <a href={`https://v0.dev/new?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                                    <img src="https://v0.dev/favicon.ico" alt="v0" className="h-4 w-4 rounded" />
-                                    <span>v0</span>
-                                    <ExternalLink className="h-4 w-4 ml-auto" />
-                                  </a>
-                                </Button>
-                                <Button variant="outline" size="sm" asChild className="justify-start space-x-2 md:col-span-2 lg:col-span-1">
-                                  <a href={`https://replit.com/ai?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
-                                    <img src="https://replit.com/favicon.ico" alt="Replit AI" className="h-4 w-4 rounded" />
-                                    <span>Replit AI</span>
-                                    <ExternalLink className="h-4 w-4 ml-auto" />
-                                  </a>
-                                </Button>
+                              <p className="text-sm text-muted-foreground">Prompt copied! Now choose a builder to start prototyping.</p>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {[
+                                  { name: 'Lovable', domain: 'lovable.dev' },
+                                  { name: 'Leap', domain: 'leap.new' },
+                                  { name: 'Base44', domain: 'base44.dev' },
+                                  { name: 'Bolt', domain: 'bolt.new' },
+                                  { name: 'v0', domain: 'v0.dev' },
+                                  { name: 'Replit AI', domain: 'replit.com' },
+                                ].map(builder => (
+                                  <Button key={builder.name} variant="outline" asChild className="justify-start space-x-2">
+                                    <a href={`https://${builder.domain}?prompt=${prompt}`} target="_blank" rel="noopener noreferrer">
+                                      <img src={`https://icon.horse/icon/${builder.domain}`} alt={builder.name} className="h-4 w-4 rounded" />
+                                      <span>{builder.name}</span>
+                                      <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />
+                                    </a>
+                                  </Button>
+                                ))}
                               </div>
                               <Button
                                 variant="ghost"

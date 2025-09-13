@@ -14,8 +14,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { showError, showSuccess } from "@/utils/toast";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { BGPattern } from "@/components/ui/bg-pattern";
-import { ProFeatureCard } from "@/components/layout/ProFeatureCard"; // Import ProFeatureCard
-import { User } from "@supabase/supabase-js"; // Import User type
+import { ProFeatureCard } from "@/components/layout/ProFeatureCard";
+import { User } from "@supabase/supabase-js";
+import { IdeaAttributes, IdeaAttributesData } from "@/components/ideas/IdeaAttributes";
+import { IdeaHealthMetrics, IdeaHealthMetricsData } from "@/components/ideas/IdeaHealthMetrics";
+import { ValueLadder, ValueLadderItem } from "@/components/ideas/ValueLadder";
 
 interface IdeaData {
   id: string;
@@ -27,6 +30,9 @@ interface IdeaData {
   trend_data: TrendData | null;
   go_to_market: GoToMarketData | null;
   fit_score: number | null;
+  idea_attributes: IdeaAttributesData | null;
+  idea_health_metrics: IdeaHealthMetricsData | null;
+  value_ladder: ValueLadderItem[] | null;
 }
 
 const IdeaDetail = () => {
@@ -35,28 +41,24 @@ const IdeaDetail = () => {
   const [idea, setIdea] = useState<IdeaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isProUser, setIsProUser] = useState(false); // State for Pro user status
+  const [isProUser, setIsProUser] = useState(false);
 
   useEffect(() => {
     const fetchIdeaAndUserStatus = async () => {
       if (!id) return;
 
-      // Fetch user subscription status
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('subscription_status')
           .eq('id', user.id)
           .single();
-        if (profileError) {
-          console.error("Error fetching profile for subscription status:", profileError);
-        } else if (profile) {
+        if (profile) {
           setIsProUser(profile.subscription_status === 'pro');
         }
       }
 
-      // Fetch idea details
       const { data, error } = await supabase
         .from("ideas")
         .select("*")
@@ -105,7 +107,7 @@ const IdeaDetail = () => {
   }
 
   if (!idea) {
-    return null; // Or a not found component
+    return null;
   }
 
   return (
@@ -145,6 +147,9 @@ const IdeaDetail = () => {
           <div className="lg:col-span-1 space-y-8">
             <Card>
               <CardHeader>
+                <div className="mb-2">
+                  <IdeaAttributes data={idea.idea_attributes} />
+                </div>
                 <CardTitle>{idea.idea_title}</CardTitle>
                 <CardDescription>{idea.problem}</CardDescription>
               </CardHeader>
@@ -159,11 +164,12 @@ const IdeaDetail = () => {
                 )}
               </CardContent>
             </Card>
+            <IdeaHealthMetrics data={idea.idea_health_metrics} />
             <ExportReport 
                 idea={idea}
                 analysis={idea.analysis}
                 trends={idea.trend_data}
-                fitScore={idea.fit_score} // Corrected prop name
+                fitScore={idea.fit_score}
                 goToMarket={idea.go_to_market}
             />
           </div>
@@ -171,12 +177,21 @@ const IdeaDetail = () => {
             <AIAnalysis data={idea.analysis} />
             <TrendSignals data={idea.trend_data} />
             {isProUser ? (
-              <GoToMarketHelpers data={idea.go_to_market} />
+              <>
+                <ValueLadder data={idea.value_ladder} />
+                <GoToMarketHelpers data={idea.go_to_market} />
+              </>
             ) : (
-              <ProFeatureCard
-                title="Unlock Go-to-Market Helpers"
-                description="View AI-generated landing page copy, brand name suggestions, and ad creative ideas for this idea. Upgrade to Pro to access this feature."
-              />
+              <>
+                <ProFeatureCard
+                  title="Unlock Value Ladder"
+                  description="View potential monetization strategies for this idea. Upgrade to Pro to access this feature."
+                />
+                <ProFeatureCard
+                  title="Unlock Go-to-Market Helpers"
+                  description="View AI-generated landing page copy, brand name suggestions, and ad creative ideas for this idea. Upgrade to Pro to access this feature."
+                />
+              </>
             )}
           </div>
         </div>

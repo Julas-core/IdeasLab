@@ -6,11 +6,12 @@ import MyIdeas from "./pages/MyIdeas";
 import IdeaDetail from "./pages/IdeaDetail";
 import Profile from "./pages/Profile";
 import Payments from "./pages/Payments";
-import NotFound from "./pages/NotFound"; // Import NotFound page
+import BrowseIdeas from "./pages/BrowseIdeas"; // Import BrowseIdeas
+import NotFound from "./pages/NotFound";
 import { Toaster } from "sonner";
 import { SessionContextProvider } from "./integrations/supabase/session-context";
 import { ThemeProvider } from "./components/theme/theme-provider";
-import ProtectedRoute from "./components/layout/ProtectedRoute"; // Import ProtectedRoute
+import ProtectedRoute from "./components/layout/ProtectedRoute";
 
 function App() {
   return (
@@ -22,16 +23,15 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             
-            {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/my-ideas" element={<MyIdeas />} />
               <Route path="/idea/:id" element={<IdeaDetail />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/payments" element={<Payments />} />
+              <Route path="/browse-ideas" element={<BrowseIdeas />} />
             </Route>
 
-            {/* Catch-all route for 404 Not Found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>

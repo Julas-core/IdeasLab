@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LayoutDashboard, FileText, Crown, LogOut, LogIn, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, FileText, Crown, LogOut, LogIn, User as UserIcon, Search } from 'lucide-react';
 import { ExpandableTabs } from '@/components/ui/expandable-tabs';
 
 const Header = () => {
@@ -39,7 +39,6 @@ const Header = () => {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        // fetch profile again on auth change
         supabase.from('profiles').select('first_name, subscription_status').eq('id', session.user.id).single().then(({ data }) => setProfile(data));
       } else {
         setProfile(null);
@@ -57,8 +56,9 @@ const Header = () => {
   };
 
   const availableTabs = [
-    { label: 'Dashboard', icon: <LayoutDashboard size={16} />, path: '/' },
+    { label: 'Dashboard', icon: <LayoutDashboard size={16} />, path: '/dashboard' },
     { label: 'My Saved Ideas', icon: <FileText size={16} />, path: '/my-ideas' },
+    { label: 'Browse Ideas', icon: <Search size={16} />, path: '/browse-ideas' },
     { label: 'Upgrade to Pro', icon: <Crown size={16} />, path: '/payments' },
   ];
 
@@ -66,12 +66,6 @@ const Header = () => {
 
   const handleTabChange = (index: number) => {
     const tabPath = availableTabs[index].path;
-    // Allow navigation to dashboard for everyone
-    if (tabPath === '/') {
-        navigate(tabPath);
-        return;
-    }
-    // For other tabs, check for user
     if (!user) {
       navigate('/login');
     } else {
