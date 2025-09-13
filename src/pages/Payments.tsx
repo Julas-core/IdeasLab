@@ -3,18 +3,25 @@ import Header from "@/components/layout/Header";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Crown, CreditCard } from "lucide-react";
+import { CheckCircle, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { BGPattern } from "@/components/ui/bg-pattern";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { User } from "@supabase/supabase-js";
+
+const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
 const Payments = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const fetchSubscriptionStatus = async () => {
+    const fetchUserAndSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
       if (user) {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -32,36 +39,72 @@ const Payments = () => {
       setLoading(false);
     };
 
-    fetchSubscriptionStatus();
+    fetchUserAndSubscription();
   }, []);
 
-  const handlePayPalSubscription = async () => {
-    // Placeholder for actual PayPal integration
-    // In a real application, this would involve:
-    // 1. Creating an order on your backend (which interacts with PayPal API)
-    // 2. Redirecting the user to PayPal for approval
-    // 3. Handling the return from PayPal (success/cancel)
-    // 4. Updating the user's subscription status in your database after successful payment
-
-    showSuccess("Initiating PayPal subscription... (This is a placeholder)");
-    console.log("PayPal subscription initiated for $9.99");
-
-    // Simulate a successful subscription update for demonstration
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ subscription_status: 'pro', paypal_order_id: 'simulated_paypal_order_id' })
-        .eq('id', user.id);
-
-      if (error) {
-        showError("Failed to update subscription status in database.");
-        console.error("Error updating profile:", error);
-      } else {
-        setSubscriptionStatus('pro');
-        showSuccess("Subscription updated to Pro! (Simulated)");
-      }
+  const createOrder = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-paypal-order', {
+        body: { amount: '29.99' }
+      });
+      if (error) throw new Error(error.message);
+      if (!data.orderID) throw new Error("OrderID not returned from function");
+      return data.orderID;
+    } catch (err) {
+      showError("Failed to create PayPal order. Please try again.");
+      console.error(err);
+      return '';
     }
+  };
+
+  const onApprove = async (data: { orderID: string }) => {
+    if (!user) {
+      showError("You must be logged in to complete a purchase.");
+      return;
+    }
+    try {
+      const { error } = await supabase.functions.invoke('capture-paypal-order', {
+        body: { orderID: data.orderID, userId: user.id }
+      });
+      if (error) throw error;
+      showSuccess("Payment successful! You now have lifetime Pro access.");
+      setSubscriptionStatus('pro');
+    } catch (err) {
+      showError("Payment failed. Please try again or contact support.");
+      console.error(err);
+    }
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return <Button className="w-full" disabled>Loading status...</Button>;
+    }
+    if (subscriptionStatus === 'pro') {
+      return (
+        <Button className="w-full" disabled variant="secondary">
+          <CheckCircle className="mr-2 h-4 w-4" /> You have Lifetime Pro Access!
+        </Button>
+      );
+    }
+    if (!PAYPAL_CLIENT_ID) {
+        return (
+            <div className="text-center p-4 bg-destructive/10 rounded-md">
+                <p className="text-destructive font-semibold">Payment system is not configured.</p>
+                <p className="text-xs text-muted-foreground">Administrator needs to set the PayPal Client ID.</p>
+            </div>
+        )
+    }
+    return (
+      <PayPalButtons
+        style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
+        createOrder={createOrder}
+        onApprove={onApprove}
+        onError={(err) => {
+            showError("An error occurred with the PayPal transaction.");
+            console.error("PayPal error:", err);
+        }}
+      />
+    );
   };
 
   return (
@@ -75,44 +118,31 @@ const Payments = () => {
             Unlock all advanced features, AI builders, and go-to-market helpers to supercharge your startup ideas.
           </p>
         </div>
+        <PayPalScriptProvider options={{ "client-id": PAYPAL_CLIENT_ID || "test", currency: "USD" }}>
+            <Card className="w-full max-w-md border-primary/50 bg-primary/5">
+            <CardHeader className="text-center">
+                <Crown className="h-10 w-10 text-primary mx-auto mb-2" />
+                <CardTitle className="text-3xl font-bold">Pro Plan</CardTitle>
+                <CardDescription className="text-5xl font-extrabold text-primary mt-2">
+                $29.99<span className="text-lg text-muted-foreground"> Lifetime</span>
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <ul className="space-y-2 text-left text-muted-foreground">
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> One-time payment, lifetime access</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> AI Analysis & Trend Signals</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Founder Fit Analysis</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Go-to-Market Helpers</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Ready to Build? Prompts</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> View & Manage Saved Ideas</li>
+                </ul>
 
-        <Card className="w-full max-w-md border-primary/50 bg-primary/5">
-          <CardHeader className="text-center">
-            <Crown className="h-10 w-10 text-primary mx-auto mb-2" />
-            <CardTitle className="text-3xl font-bold">Pro Plan</CardTitle>
-            <CardDescription className="text-5xl font-extrabold text-primary mt-2">
-              $9.99<span className="text-lg text-muted-foreground">/month</span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <ul className="space-y-2 text-left text-muted-foreground">
-              <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Unlimited Idea Generation</li>
-              <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> AI Analysis & Trend Signals</li>
-              <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Founder Fit Analysis</li>
-              <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Go-to-Market Helpers</li>
-              <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Ready to Build? Prompts</li>
-              <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Save Unlimited Ideas</li>
-            </ul>
-
-            <div className="pt-4 border-t border-border">
-              {loading ? (
-                <Button className="w-full" disabled>Loading status...</Button>
-              ) : subscriptionStatus === 'pro' ? (
-                <Button className="w-full" disabled variant="secondary">
-                  <CheckCircle className="mr-2 h-4 w-4" /> You are already a Pro member!
-                </Button>
-              ) : (
-                <Button
-                  className="w-full flex items-center justify-center gap-2 bg-yellow-400 text-black hover:bg-yellow-500"
-                  onClick={handlePayPalSubscription}
-                >
-                  <CreditCard className="h-5 w-5" />
-                  Subscribe with PayPal
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="pt-4 border-t border-border">
+                    {renderContent()}
+                </div>
+            </CardContent>
+            </Card>
+        </PayPalScriptProvider>
       </main>
       <MadeWithDyad />
     </div>

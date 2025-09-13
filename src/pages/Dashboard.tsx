@@ -12,7 +12,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Save, ExternalLink, Copy } from "lucide-react";
+import { Save, ExternalLink, Copy, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { User } from "@supabase/supabase-js";
@@ -20,7 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Link } from "react-router-dom";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { Textarea } from "@/components/ui/textarea";
-import { ProFeatureCard } from "@/components/layout/ProFeatureCard"; // Import ProFeatureCard
+import { ProFeatureCard } from "@/components/layout/ProFeatureCard";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface IdeaData {
   idea_title: string;
@@ -32,7 +33,7 @@ interface IdeaData {
 interface ProfileData {
     first_name: string | null;
     skills_description: string | null;
-    subscription_status: string | null; // Added subscription_status
+    subscription_status: string | null;
 }
 
 const Dashboard = () => {
@@ -58,7 +59,7 @@ const Dashboard = () => {
       if (user) {
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('first_name, skills_description, subscription_status') // Fetch subscription_status
+          .select('first_name, skills_description, subscription_status')
           .eq('id', user.id)
           .single();
         
@@ -69,18 +70,50 @@ const Dashboard = () => {
       }
     };
 
+    const initializeIdea = () => {
+        const storedIdeaString = localStorage.getItem('dailyIdea');
+        const storedTimestamp = localStorage.getItem('dailyIdeaTimestamp');
+
+        if (storedIdeaString && storedTimestamp) {
+            const idea = JSON.parse(storedIdeaString);
+            const timestamp = new Date(storedTimestamp);
+            const now = new Date();
+            const hoursDiff = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60);
+
+            if (hoursDiff < 24) {
+                setCurrentIdea(idea.currentIdea);
+                setAnalysisData(idea.analysisData);
+                setTrendData(idea.trendData);
+                setGoToMarketData(idea.goToMarketData);
+                setIdeaGenerated(prev => !prev);
+                setIsLoading(false);
+                return;
+            }
+        }
+        fetchIdeaOfTheDay();
+    };
+    
     checkUserAndProfile();
-    fetchIdeaOfTheDay();
+    initializeIdea();
   }, []);
 
   const fetchIdeaOfTheDay = async () => {
     setIsLoading(true);
     setFitScore(null);
-    setShowBuilders(false); // Reset builders view when generating new idea
+    setShowBuilders(false);
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-idea');
       if (error) throw error;
+
+      const ideaToCache = {
+        currentIdea: data.idea,
+        analysisData: data.analysis,
+        trendData: data.trends,
+        goToMarketData: data.goToMarket,
+      };
+      localStorage.setItem('dailyIdea', JSON.stringify(ideaToCache));
+      localStorage.setItem('dailyIdeaTimestamp', new Date().toISOString());
 
       setCurrentIdea(data.idea);
       setAnalysisData(data.analysis);
@@ -98,7 +131,6 @@ const Dashboard = () => {
   const handleAnalyzeFit = (description: string) => {
     setIsAnalyzingFit(true);
     setFitScore(null);
-    // If the user entered a new description, we can offer to save it to their profile.
     if (user && description !== profile?.skills_description) {
         supabase.from('profiles').update({ skills_description: description }).eq('id', user.id).then();
     }
@@ -142,7 +174,6 @@ const Dashboard = () => {
     }
   };
 
-  // Generate full prompt text for copying
   const getFullPrompt = () => {
     if (!currentIdea) return '';
     return `Build a startup app for "${currentIdea.idea_title}".
@@ -169,7 +200,6 @@ Key features to include: User authentication, basic dashboard, core functionalit
     }
   };
 
-  // Construct encoded prompt for any direct URL params (fallback for builders that support it)
   const getBuilderPrompt = () => {
     if (!currentIdea) return '';
     return encodeURIComponent(
@@ -196,10 +226,28 @@ Key features to include: User authentication, basic dashboard, core functionalit
                   <p className="text-muted-foreground">An AI-generated startup concept based on emerging trends.</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={fetchIdeaOfTheDay} disabled={isLoading}>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    New Idea
-                  </Button>
+                  {isProUser ? (
+                    <Button asChild>
+                      <Link to="/my-ideas">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Previous Ideas
+                      </Link>
+                    </Button>
+                  ) : (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button disabled>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Previous Ideas
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Upgrade to Pro to view saved ideas.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                   {user && (
                     <Button onClick={handleSaveIdea} disabled={isSaving}>
                       <Save className="mr-2 h-4 w-4" />
@@ -263,7 +311,6 @@ Key features to include: User authentication, basic dashboard, core functionalit
                 </div>
               </div>
 
-              {/* New Interactive Build Section with Animation */}
               {isProUser ? (
                 <div className="mt-12">
                   <Card>
@@ -354,7 +401,6 @@ Key features to include: User authentication, basic dashboard, core functionalit
                                 variant="ghost"
                                 onClick={() => {
                                   setShowBuilders(false);
-                                  // Optionally recopy the prompt
                                   navigator.clipboard.writeText(fullPrompt);
                                 }}
                                 className="w-full"
