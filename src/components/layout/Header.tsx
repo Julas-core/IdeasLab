@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LayoutDashboard, FileText, Crown, LogOut, LogIn, User as UserIcon } from 'lucide-react';
-import { ExpandableTabs } from './ExpandableTabs';
+import { ExpandableTabs } from '@/components/ui/expandable-tabs';
 
 const Header = () => {
   const [user, setUser] = useState<User | null>(null);
