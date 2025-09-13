@@ -21,11 +21,9 @@ serve(async (req) => {
       headers: {
         "Authorization": `Bearer ${openrouterApiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://wkdugvkkxabtipqfvxcd.supabase.co", // Recommended by OpenRouter
-        "X-Title": "IdeaLab", // Recommended by OpenRouter
       },
       body: JSON.stringify({
-        model: "mistralai/mistral-7b-instruct-v0.2", // A powerful and cost-effective model
+        model: "mistralai/mixtral-8x7b-instruct-v0.1", // Switched to a highly reliable model
         response_format: { type: "json_object" },
         messages: [
           {
@@ -64,6 +62,7 @@ serve(async (req) => {
 
     if (!response.ok) {
         const errorBody = await response.text();
+        console.error(`OpenRouter API error: ${response.status} ${response.statusText}`, errorBody);
         throw new Error(`OpenRouter API error: ${response.statusText} - ${errorBody}`);
     }
 
