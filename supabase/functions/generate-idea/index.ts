@@ -1,60 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 
-// Simulate the AI finding a trending topic
-const trendingTopics = [
-  "Sustainable Packaging",
-  "AI for Personal Finance",
-  "Remote Team Collaboration",
-  "Mental Wellness Apps",
-  "Hyperlocal Delivery",
-  "Personalized Nutrition",
-  "Gamified Education",
-  "Circular Economy Fashion",
-];
-
-// Mock data generation functions
-const generateMockIdea = (keyword: string) => ({
-    idea_title: `AI-Powered ${keyword} Platform`,
-    problem: `People interested in ${keyword} lack a centralized, easy-to-use solution.`,
-    solution: `A comprehensive platform that uses AI to provide personalized ${keyword} recommendations and resources.`,
-    market: `Enthusiasts and professionals in the ${keyword} space.`,
-});
-
-const generateMockAnalysis = (idea: any) => ({
-  problem: `A deeper look into the problem of '${idea.problem}'. It seems to affect ${idea.market} significantly.`,
-  opportunity: `There is a huge opportunity to solve this with '${idea.solution}'. The market is ripe for disruption.`,
-  targetAudience: `The primary target audience is ${idea.market}, specifically those who struggle with this daily.`,
-  competitors: "Current competitors are slow and expensive. Key players include LegacyCorp and OldTech Inc.",
-  revenuePotential: "High potential for a subscription-based model, with projected ARR of $5M in 3 years.",
-  risks: "Market adoption could be slow. Technological hurdles may arise.",
-  whyNow: "Recent advancements in technology and a shift in consumer behavior make this the perfect time.",
-});
-
-const generateMockTrends = (idea: any) => ({
-    googleTrends: [
-        { name: idea.idea_title.split(" ")[0], interest: Math.floor(Math.random() * 100) },
-        { name: "competitor A", interest: Math.floor(Math.random() * 100) },
-        { name: "competitor B", interest: Math.floor(Math.random() * 100) },
-    ],
-    redditMentions: [
-        { name: idea.idea_title.split(" ")[0], mentions: Math.floor(Math.random() * 500) },
-        { name: "related topic", mentions: Math.floor(Math.random() * 500) },
-    ]
-});
-
-const generateMockGoToMarket = (idea: any) => ({
-    landingPageCopy: {
-        headline: `The Ultimate Solution for ${idea.problem}`,
-        subheadline: `With ${idea.idea_title}, you can finally achieve your goals without the hassle.`,
-        cta: "Get Started for Free",
-    },
-    brandNameSuggestions: ["Solutionify", `${idea.idea_title.split(" ")[0]}Hub`, "NextGen Solutions"],
-    adCreativeIdeas: [
-        `A video showing someone struggling with '${idea.problem}' and then finding relief with '${idea.solution}'.`,
-        `A carousel ad on Instagram showcasing key features.`,
-    ]
-});
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -66,29 +11,74 @@ serve(async (req) => {
   }
 
   try {
-    // The AI now picks its own topic
-    const keyword = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
+    const openrouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
+    if (!openrouterApiKey) {
+      throw new Error("OpenRouter API key is not set in Supabase secrets.");
+    }
 
-    const idea = generateMockIdea(keyword);
-    const analysis = generateMockAnalysis(idea);
-    const trends = generateMockTrends(idea);
-    const goToMarket = generateMockGoToMarket(idea);
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openrouterApiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://wkdugvkkxabtipqfvxcd.supabase.co", // Recommended by OpenRouter
+        "X-Title": "IdeaLab", // Recommended by OpenRouter
+      },
+      body: JSON.stringify({
+        model: "mistralai/mistral-7b-instruct-v0.2", // A powerful and cost-effective model
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert startup analyst. Your task is to generate a novel startup idea based on current, real-world trends. You must provide the output in a structured JSON format.
 
-    const responseData = {
-        idea,
-        analysis,
-        trends,
-        goToMarket,
-    };
+            The JSON object should have the following keys: "idea", "analysis", "trends", and "goToMarket".
+
+            1.  **idea**: An object with "idea_title", "problem", "solution", and "market".
+                -   "idea_title": A catchy name for the startup.
+                -   "problem": A concise description of a real problem people are facing, based on a current trend.
+                -   "solution": A clear, innovative solution to that problem.
+                -   "market": The target audience or market for this solution.
+
+            2.  **analysis**: An object with "problem", "opportunity", "targetAudience", "competitors", "revenuePotential", "risks", and "whyNow".
+                -   Provide a detailed breakdown for each field. "whyNow" should explain why this idea is timely.
+
+            3.  **trends**: An object with "googleTrends" and "redditMentions".
+                -   "googleTrends": An array of 3 objects, each with "name" (a relevant search term) and "interest" (a score from 0-100).
+                -   "redditMentions": An array of 2 objects, each with "name" (a relevant subreddit or topic) and "mentions" (an estimated number of recent mentions).
+
+            4.  **goToMarket**: An object with "landingPageCopy", "brandNameSuggestions", and "adCreativeIdeas".
+                -   "landingPageCopy": An object with "headline", "subheadline", and "cta".
+                -   "brandNameSuggestions": An array of 3 creative brand names.
+                -   "adCreativeIdeas": An array of 2 distinct ad ideas.
+
+            Generate a high-quality, plausible, and interesting startup concept. Ensure the final output is a single, valid JSON object.`,
+          },
+          {
+            role: "user",
+            content: "Generate a new startup idea.",
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`OpenRouter API error: ${response.statusText} - ${errorBody}`);
+    }
+
+    const completion = await response.json();
+    const responseData = JSON.parse(completion.choices[0].message.content);
 
     return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Error in generate-idea function:", error);
+    return new Response(JSON.stringify({ error: "Failed to generate idea: " + error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: 500,
     })
   }
 })
