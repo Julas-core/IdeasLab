@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { showError, showSuccess } from "@/utils/toast";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { BGPattern } from "@/components/ui/bg-pattern";
-import { ProFeatureCard } from "@/components/layout/ProFeatureCard";
+import { BlurredProFeature } from "@/components/layout/BlurredProFeature";
 import { useAuth } from "@/integrations/supabase/auth-context";
 import { IdeaAttributes, IdeaAttributesData } from "@/components/ideas/IdeaAttributes";
 import { IdeaHealthMetrics, IdeaHealthMetricsData } from "@/components/ideas/IdeaHealthMetrics";
@@ -173,14 +173,18 @@ const IdeaDetail = () => {
               </>
             ) : (
               <>
-                <ProFeatureCard
+                <BlurredProFeature
                   title="Unlock Value Ladder"
                   description="View potential monetization strategies for this idea. Upgrade to Pro to access this feature."
-                />
-                <ProFeatureCard
+                >
+                  <ValueLadder data={idea.value_ladder} />
+                </BlurredProFeature>
+                <BlurredProFeature
                   title="Unlock Go-to-Market Helpers"
                   description="View AI-generated landing page copy, brand name suggestions, and ad creative ideas for this idea. Upgrade to Pro to access this feature."
-                />
+                >
+                  <GoToMarketHelpers data={idea.go_to_market} />
+                </BlurredProFeature>
               </>
             )}
           </div>

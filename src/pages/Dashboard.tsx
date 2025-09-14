@@ -7,19 +7,18 @@ import { AIAnalysis, AnalysisData } from "@/components/ai/AIAnalysis";
 import { TrendSignals, TrendData } from "@/components/trends/TrendSignals";
 import { FounderFitQuiz } from "@/components/founderfit/FounderFitQuiz";
 import { GoToMarketHelpers, GoToMarketData } from "@/components/gotomarket/GoToMarketHelpers";
-import { ExportReport } from "@/components/export/ExportReport";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Save, ExternalLink, Copy, FileText, RefreshCw, Lock } from "lucide-react";
+import { Copy, ExternalLink, FileText, RefreshCw, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Link, useNavigate } from "react-router-dom";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { Textarea } from "@/components/ui/textarea";
-import { ProFeatureCard } from "@/components/layout/ProFeatureCard";
+import { BlurredProFeature } from "@/components/layout/BlurredProFeature";
 import { IdeaAttributes, IdeaAttributesData } from "@/components/ideas/IdeaAttributes";
 import { IdeaHealthMetrics, IdeaHealthMetricsData } from "@/components/ideas/IdeaHealthMetrics";
 import { ValueLadder, ValueLadderItem } from "@/components/ideas/ValueLadder";
@@ -42,6 +41,36 @@ interface DailyIdeaResponse {
   idea_health_metrics: IdeaHealthMetricsData;
   value_ladder: ValueLadderItem[];
 }
+
+// Dummy data for blurred previews
+const dummyTrendData: TrendData = {
+  googleTrends: [
+    { name: "AI Startups", interest: 85 },
+    { name: "SaaS Tools", interest: 92 },
+    { name: "Remote Work", interest: 78 },
+  ],
+  redditMentions: [
+    { name: "r/startup_ideas", mentions: 150 },
+    { name: "r/SaaS", mentions: 230 },
+  ],
+};
+
+const dummyValueLadderData: ValueLadderItem[] = [
+    { name: "Free Tier", description: "Basic access to core features.", price: "Free" },
+    { name: "Pro Plan", description: "Advanced features and unlimited usage.", price: "$29/mo" },
+    { name: "Enterprise", description: "Custom solutions for large teams.", price: "Contact Us" },
+];
+
+const dummyGoToMarketData: GoToMarketData = {
+  landingPageCopy: {
+    headline: "Your Next Big Idea, Validated.",
+    subheadline: "Stop guessing. Start building with data-driven confidence.",
+    cta: "Get Started for Free",
+  },
+  brandNameSuggestions: ["IdeaSpark", "Venturify", "MarketFit"],
+  adCreativeIdeas: ["Show a frustrated entrepreneur, then a successful one using the app.", "A fast-paced montage of trend graphs and data points."],
+};
+
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -217,10 +246,12 @@ Key features to include: User authentication, basic dashboard, core functionalit
                         initialDescription={profile?.skills_description || ""}
                     />
                   ) : (
-                    <ProFeatureCard
+                    <BlurredProFeature
                       title="Unlock Founder Fit Analysis"
-                      description="Describe your background and skills to determine your fit with the idea. Upgrade to Pro to access this feature."
-                    />
+                      description="Describe your background and skills to determine your fit with the idea."
+                    >
+                      <FounderFitQuiz onAnalyze={() => {}} isAnalyzing={false} score={88} ideaSubmitted={true} initialDescription="I'm a full-stack developer with 8 years of experience in building scalable web applications..." />
+                    </BlurredProFeature>
                   )}
                 </div>
                 <div className="lg:col-span-2 space-y-8">
@@ -228,26 +259,32 @@ Key features to include: User authentication, basic dashboard, core functionalit
                   {isProUser ? (
                     <TrendSignals data={trendData} />
                   ) : (
-                    <ProFeatureCard
+                    <BlurredProFeature
                       title="Unlock Trend Signals"
-                      description="See real-time market trends and data-driven analysis for each idea. Upgrade to Pro to access this feature."
-                    />
+                      description="See real-time market trends and data-driven analysis for each idea."
+                    >
+                      <TrendSignals data={dummyTrendData} />
+                    </BlurredProFeature>
                   )}
                   {isProUser ? (
                     <ValueLadder data={valueLadder} />
                   ) : (
-                     <ProFeatureCard
+                     <BlurredProFeature
                       title="Unlock Value Ladder"
-                      description="See potential monetization strategies and product tiers for this idea. Upgrade to Pro to access this feature."
-                    />
+                      description="See potential monetization strategies and product tiers for this idea."
+                    >
+                      <ValueLadder data={dummyValueLadderData} />
+                    </BlurredProFeature>
                   )}
                   {isProUser ? (
                     <GoToMarketHelpers data={goToMarketData} />
                   ) : (
-                    <ProFeatureCard
+                    <BlurredProFeature
                       title="Unlock Go-to-Market Helpers"
-                      description="Get AI-generated landing page copy, brand name suggestions, and ad creative ideas. Upgrade to Pro to access this feature."
-                    />
+                      description="Get AI-generated landing page copy, brand name suggestions, and ad creative ideas."
+                    >
+                      <GoToMarketHelpers data={dummyGoToMarketData} />
+                    </BlurredProFeature>
                   )}
                 </div>
               </div>
@@ -328,10 +365,31 @@ Key features to include: User authentication, basic dashboard, core functionalit
                 </div>
               ) : (
                 <div className="mt-12">
-                  <ProFeatureCard
+                  <BlurredProFeature
                     title="Ready to Build? Upgrade to Pro!"
-                    description="Unlock the ability to generate prompts for AI builders and kickstart your development process. Upgrade to Pro to access this feature."
-                  />
+                    description="Unlock the ability to generate prompts for AI builders and kickstart your development process."
+                  >
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Ready to Build?</CardTitle>
+                        <CardDescription>
+                          First, here's a complete prompt for your idea. Copy it and paste into any AI builder. Then open the builders below.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <Textarea
+                          value="This is a sample prompt that shows you what you'll get when you upgrade to pro..."
+                          readOnly
+                          rows={8}
+                          className="font-mono text-sm bg-muted/50 resize-none"
+                        />
+                        <Button className="w-full" variant="secondary" disabled>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy Prompt & Open Builders
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </BlurredProFeature>
                 </div>
               )}
             </>
