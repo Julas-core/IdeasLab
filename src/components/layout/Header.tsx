@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LayoutDashboard, FileText, Crown, LogOut, LogIn, User as UserIcon, Search } from 'lucide-react';
 import { ExpandableTabs } from '@/components/ui/expandable-tabs';
+import { Badge } from '@/components/ui/badge';
 
 const Header = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -108,9 +109,16 @@ const Header = () => {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{profile?.first_name || 'Welcome'}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                      {profile?.subscription_status && (
+                        <Badge variant={['pro', 'admin'].includes(profile.subscription_status) ? 'default' : 'secondary'} className="capitalize text-xs">
+                          {profile.subscription_status}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
