@@ -180,7 +180,7 @@ Key features to include: User authentication, basic dashboard, core functionalit
   };
 
   const prompt = getBuilderPrompt();
-  const isProUser = profile?.subscription_status === 'pro';
+  const isProUser = ['pro', 'admin'].includes(profile?.subscription_status || '');
 
   return (
     <div className="min-h-screen bg-background relative">

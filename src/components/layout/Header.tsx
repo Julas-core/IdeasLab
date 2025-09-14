@@ -118,7 +118,7 @@ const Header = () => {
                   <UserIcon className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                {profile?.subscription_status !== 'pro' && (
+                {!['pro', 'admin'].includes(profile?.subscription_status || '') && (
                   <DropdownMenuItem onClick={() => navigate('/payments')}>
                     <Crown className="mr-2 h-4 w-4" />
                     <span>Upgrade to Pro</span>

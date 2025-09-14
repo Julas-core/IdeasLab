@@ -55,7 +55,7 @@ const IdeaDetail = () => {
           .eq('id', user.id)
           .single();
         if (profile) {
-          setIsProUser(profile.subscription_status === 'pro');
+          setIsProUser(['pro', 'admin'].includes(profile.subscription_status || ''));
         }
       }
 

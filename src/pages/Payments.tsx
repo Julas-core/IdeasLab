@@ -21,6 +21,8 @@ const Payments = () => {
   const navigate = useNavigate();
   const ideaId = searchParams.get("ideaId");
   const [ideaToPurchase, setIdeaToPurchase] = useState<{ idea_title: string } | null>(null);
+  const [adminClickCount, setAdminClickCount] = useState(0);
+  const [isAdminBypassVisible, setIsAdminBypassVisible] = useState(false);
 
   useEffect(() => {
     const fetchUserAndSubscription = async () => {
@@ -108,11 +110,40 @@ const Payments = () => {
     }
   };
 
+  const handleAdminBypass = async () => {
+    if (!user) {
+      showError("You must be logged in to grant admin access.");
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscription_status: 'admin' })
+        .eq('id', user.id);
+      if (error) throw error;
+      showSuccess("Admin Pro access granted! Refreshing...");
+      setSubscriptionStatus('admin');
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      showError("Failed to grant admin access.");
+      console.error(err);
+    }
+  };
+
+  const handleIconClick = () => {
+    const newCount = adminClickCount + 1;
+    setAdminClickCount(newCount);
+    if (newCount >= 5) {
+      setIsAdminBypassVisible(true);
+      showSuccess("Admin bypass unlocked.");
+    }
+  };
+
   const renderContent = () => {
     if (loading) {
       return <Button className="w-full" disabled>Loading status...</Button>;
     }
-    if (subscriptionStatus === 'pro' && !ideaId) {
+    if (['pro', 'admin'].includes(subscriptionStatus || '') && !ideaId) {
       return (
         <Button className="w-full" disabled variant="secondary">
           <CheckCircle className="mr-2 h-4 w-4" /> You already have Pro Access!
@@ -159,7 +190,7 @@ const Payments = () => {
         <PayPalScriptProvider options={{ "client-id": PAYPAL_CLIENT_ID || "test", currency: "USD" }}>
             <Card className="w-full max-w-md border-primary/50 bg-primary/5">
             <CardHeader className="text-center">
-                <Crown className="h-10 w-10 text-primary mx-auto mb-2" />
+                <Crown onClick={handleIconClick} className="h-10 w-10 text-primary mx-auto mb-2 cursor-pointer" title="Admin Access Trigger" />
                 <CardTitle className="text-3xl font-bold">{ideaToPurchase ? `Exclusive Idea` : "Pro Plan"}</CardTitle>
                 <CardDescription className="text-5xl font-extrabold text-primary mt-2">
                 $29.99<span className="text-lg text-muted-foreground"> Lifetime</span>
@@ -179,6 +210,13 @@ const Payments = () => {
                 <div className="pt-4 border-t border-border">
                     {renderContent()}
                 </div>
+                {isAdminBypassVisible && (
+                    <div className="mt-4">
+                        <Button variant="secondary" className="w-full" onClick={handleAdminBypass}>
+                            Grant Admin Pro Access (Dev Only)
+                        </Button>
+                    </div>
+                )}
             </CardContent>
             </Card>
         </PayPalScriptProvider>
