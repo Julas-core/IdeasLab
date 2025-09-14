@@ -15,7 +15,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { ProFeatureCard } from "@/components/layout/ProFeatureCard";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/integrations/supabase/auth-context";
 import { IdeaAttributes, IdeaAttributesData } from "@/components/ideas/IdeaAttributes";
 import { IdeaHealthMetrics, IdeaHealthMetricsData } from "@/components/ideas/IdeaHealthMetrics";
 import { ValueLadder, ValueLadderItem } from "@/components/ideas/ValueLadder";
@@ -38,27 +38,17 @@ interface IdeaData {
 const IdeaDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { profile, loading: authLoading } = useAuth();
   const [idea, setIdea] = useState<IdeaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isProUser, setIsProUser] = useState(false);
+
+  const isProUser = ['pro', 'admin'].includes(profile?.subscription_status || '');
 
   useEffect(() => {
-    const fetchIdeaAndUserStatus = async () => {
+    const fetchIdea = async () => {
       if (!id) return;
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('subscription_status')
-          .eq('id', user.id)
-          .single();
-        if (profile) {
-          setIsProUser(['pro', 'admin'].includes(profile.subscription_status || ''));
-        }
-      }
-
+      setLoading(true);
       const { data, error } = await supabase
         .from("ideas")
         .select("*")
@@ -75,7 +65,7 @@ const IdeaDetail = () => {
       setLoading(false);
     };
 
-    fetchIdeaAndUserStatus();
+    fetchIdea();
   }, [id, navigate]);
 
   const handleDelete = async () => {
@@ -93,7 +83,7 @@ const IdeaDetail = () => {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-background relative">
         <BGPattern variant="grid" mask="fade-edges" />

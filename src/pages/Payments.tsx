@@ -100,8 +100,9 @@ const Payments = () => {
         .eq('id', user.id);
       if (error) throw error;
       await refetchProfile();
-      showSuccess("Admin Pro access granted!");
-      navigate('/dashboard');
+      showSuccess("Admin Pro access granted! Reloading...");
+      // Force a hard reload to ensure the auth context is fully updated
+      window.location.assign('/dashboard');
     } catch (err) {
       showError("Failed to grant admin access.");
       console.error(err);
