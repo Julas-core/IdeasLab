@@ -14,63 +14,64 @@ serve(async (req) => {
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")! // Use service role key for database operations
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     let forceNew = false;
     if (req.method === 'POST') {
-      const requestBody = await req.json();
-      forceNew = requestBody.forceNew || false;
+      const body = await req.json().catch(() => ({}));
+      forceNew = body.forceNew || false;
     }
 
-    // 1. Try to fetch the latest idea generated within the last 24 hours
-    const { data: latestIdea, error: fetchError } = await supabase
-      .from('daily_ideas')
-      .select('idea_data, generated_at')
-      .order('generated_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
-      console.error("Error fetching latest daily idea:", fetchError);
-      throw new Error("Failed to fetch daily idea from database.");
-    }
-
-    const now = new Date();
     let ideaToReturn = null;
 
-    if (latestIdea && latestIdea.generated_at) {
-      const generatedAt = new Date(latestIdea.generated_at);
-      const hoursDiff = (now.getTime() - generatedAt.getTime()) / (1000 * 60 * 60);
+    if (!forceNew) {
+      const { data: latestIdea, error: fetchError } = await supabase
+        .from('daily_ideas')
+        .select('id, idea_data, generated_at')
+        .eq('status', 'available')
+        .order('generated_at', { ascending: false })
+        .limit(1)
+        .single();
 
-      if (hoursDiff < 24) {
-        ideaToReturn = latestIdea.idea_data;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error("Error fetching available daily idea:", fetchError);
+        throw new Error("Failed to fetch daily idea from database.");
+      }
+
+      if (latestIdea) {
+        const now = new Date();
+        const generatedAt = new Date(latestIdea.generated_at);
+        const hoursDiff = (now.getTime() - generatedAt.getTime()) / (1000 * 60 * 60);
+        if (hoursDiff < 24) {
+          ideaToReturn = {
+            id: latestIdea.id,
+            ...latestIdea.idea_data
+          };
+        }
       }
     }
 
-    // 2. If no fresh idea, generate a new one
-    //    OR if forceNew is true, generate a new one regardless
-    if (forceNew || !ideaToReturn) {
+    if (!ideaToReturn) {
       console.log("Generating a new idea of the day...");
-      // Invoke the existing generate-idea Edge Function
       const { data: newIdeaData, error: generateError } = await supabase.functions.invoke('generate-idea');
       if (generateError) throw generateError;
 
-      // Delete old daily idea if forcing a new one, to keep only one "daily" idea
-      if (forceNew && latestIdea) {
-        await supabase.from('daily_ideas').delete().eq('id', latestIdea.id);
-      }
-
-      // Store the new idea in the database
-      const { error: insertError } = await supabase
+      const { data: insertedIdea, error: insertError } = await supabase
         .from('daily_ideas')
-        .insert({ idea_data: newIdeaData });
+        .insert({ idea_data: newIdeaData, status: 'available' })
+        .select('id, idea_data')
+        .single();
 
       if (insertError) {
         console.error("Error inserting new daily idea:", insertError);
         throw new Error("Failed to save new daily idea.");
       }
-      ideaToReturn = newIdeaData;
+      
+      ideaToReturn = {
+        id: insertedIdea.id,
+        ...insertedIdea.idea_data
+      };
     }
 
     return new Response(JSON.stringify(ideaToReturn), {

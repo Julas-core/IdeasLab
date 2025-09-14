@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import Header from "@/components/layout/Header"; // Corrected import
+import Header from "@/components/layout/Header";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BGPattern } from "@/components/ui/bg-pattern";
 
-interface SavedIdea {
+interface OwnedIdea {
   id: string;
   idea_title: string;
   problem: string;
@@ -16,7 +16,7 @@ interface SavedIdea {
 }
 
 const MyIdeas = () => {
-  const [ideas, setIdeas] = useState<SavedIdea[]>([]);
+  const [ideas, setIdeas] = useState<OwnedIdea[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,8 +47,8 @@ const MyIdeas = () => {
       <Header />
       <main className="container mx-auto p-4 md:p-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold tracking-tight">My Saved Ideas</h2>
-          <p className="text-muted-foreground">All your brilliant startup concepts in one place.</p>
+          <h2 className="text-3xl font-bold tracking-tight">My Owned Ideas</h2>
+          <p className="text-muted-foreground">Your exclusive, purchased startup concepts.</p>
         </div>
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -74,7 +74,7 @@ const MyIdeas = () => {
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col justify-end">
                   <p className="text-sm text-muted-foreground mb-4">
-                    Saved on {new Date(idea.created_at).toLocaleDateString()}
+                    Owned on {new Date(idea.created_at).toLocaleDateString()}
                   </p>
                   <Button asChild>
                     <Link to={`/idea/${idea.id}`}>View Details</Link>
@@ -85,8 +85,8 @@ const MyIdeas = () => {
           </div>
         ) : (
           <div className="text-center py-16 border-2 border-dashed rounded-lg">
-            <h3 className="text-xl font-semibold">No ideas saved yet!</h3>
-            <p className="text-muted-foreground mt-2">Head back to the dashboard to generate and save your first idea.</p>
+            <h3 className="text-xl font-semibold">No ideas owned yet!</h3>
+            <p className="text-muted-foreground mt-2">Head back to the dashboard to find and own your first idea.</p>
             <Button asChild className="mt-4">
               <Link to="/dashboard">Go to Dashboard</Link>
             </Button>

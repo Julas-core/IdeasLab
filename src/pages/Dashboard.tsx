@@ -12,12 +12,12 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { LoadingSkeleton } from "@/components/layout/LoadingSkeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Save, ExternalLink, Copy, FileText, RefreshCw } from "lucide-react"; // Added RefreshCw icon
+import { Save, ExternalLink, Copy, FileText, RefreshCw, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { Textarea } from "@/components/ui/textarea";
 import { ProFeatureCard } from "@/components/layout/ProFeatureCard";
@@ -33,6 +33,17 @@ interface IdeaData {
   market: string;
 }
 
+interface DailyIdeaResponse {
+  id: string;
+  idea: IdeaData;
+  analysis: AnalysisData;
+  trends: TrendData;
+  goToMarket: GoToMarketData;
+  idea_attributes: IdeaAttributesData;
+  idea_health_metrics: IdeaHealthMetricsData;
+  value_ladder: ValueLadderItem[];
+}
+
 interface ProfileData {
     first_name: string | null;
     skills_description: string | null;
@@ -41,8 +52,8 @@ interface ProfileData {
 
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [ideaGenerated, setIdeaGenerated] = useState(false);
+  const [dailyIdeaId, setDailyIdeaId] = useState<string | null>(null);
   const [currentIdea, setCurrentIdea] = useState<IdeaData | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [trendData, setTrendData] = useState<TrendData | null>(null);
@@ -56,6 +67,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [showBuilders, setShowBuilders] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkUserAndProfile = async () => {
@@ -80,17 +92,18 @@ const Dashboard = () => {
     checkUserAndProfile();
   }, []);
 
-  const fetchDailyIdea = async (forceNew = false) => { // Added forceNew parameter
+  const fetchDailyIdea = async (forceNew = false) => {
     setIsLoading(true);
     setFitScore(null);
     setShowBuilders(false);
     
     try {
-      const { data, error } = await supabase.functions.invoke('get-daily-idea', {
-        body: { forceNew: forceNew } // Pass forceNew to the Edge Function
+      const { data, error } = await supabase.functions.invoke<DailyIdeaResponse>('get-daily-idea', {
+        body: { forceNew: forceNew }
       });
       if (error) throw error;
 
+      setDailyIdeaId(data.id);
       setCurrentIdea(data.idea);
       setAnalysisData(data.analysis);
       setTrendData(data.trends);
@@ -122,37 +135,14 @@ const Dashboard = () => {
     }, 1500);
   };
 
-  const handleSaveIdea = async () => {
+  const handleOwnIdea = () => {
     if (!user) {
-      showError("You must be logged in to save an idea.");
+      showError("Please log in to own an idea.");
+      navigate('/login');
       return;
     }
-    if (!currentIdea) return;
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase.from('ideas').insert({
-        user_id: user.id,
-        idea_title: currentIdea.idea_title,
-        problem: currentIdea.problem,
-        solution: currentIdea.solution,
-        market: currentIdea.market,
-        analysis: analysisData,
-        trend_data: trendData,
-        go_to_market: goToMarketData,
-        fit_score: fitScore,
-        idea_attributes: ideaAttributes,
-        idea_health_metrics: ideaHealthMetrics,
-        value_ladder: valueLadder,
-      });
-
-      if (error) throw error;
-      showSuccess("Idea saved successfully!");
-    } catch (error) {
-      console.error("Error saving idea:", error);
-      showError("Failed to save idea. Please try again.");
-    } finally {
-      setIsSaving(false);
+    if (dailyIdeaId) {
+      navigate(`/payments?ideaId=${dailyIdeaId}`);
     }
   };
 
@@ -208,38 +198,20 @@ Key features to include: User authentication, basic dashboard, core functionalit
                   <p className="text-muted-foreground">An AI-generated startup concept based on emerging trends.</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => fetchDailyIdea(true)} disabled={isLoading}> {/* New button */}
+                  <Button onClick={() => fetchDailyIdea(true)} disabled={isLoading}>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Generate New Idea
                   </Button>
-                  {isProUser ? (
-                    <Button asChild>
-                      <Link to="/my-ideas">
-                        <FileText className="mr-2 h-4 w-4" />
-                        My Saved Ideas
-                      </Link>
-                    </Button>
-                  ) : (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button disabled>
-                            <FileText className="mr-2 h-4 w-4" />
-                            My Saved Ideas
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Upgrade to Pro to view saved ideas.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                  {user && (
-                    <Button onClick={handleSaveIdea} disabled={isSaving}>
-                      <Save className="mr-2 h-4 w-4" />
-                      {isSaving ? 'Saving...' : 'Save Idea'}
-                    </Button>
-                  )}
+                  <Button asChild>
+                    <Link to="/my-ideas">
+                      <FileText className="mr-2 h-4 w-4" />
+                      My Owned Ideas
+                    </Link>
+                  </Button>
+                  <Button onClick={handleOwnIdea}>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Own This Idea
+                  </Button>
                 </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">

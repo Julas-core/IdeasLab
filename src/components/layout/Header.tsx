@@ -57,7 +57,7 @@ const Header = () => {
 
   const availableTabs = [
     { label: 'Dashboard', icon: <LayoutDashboard size={16} />, path: '/dashboard' },
-    { label: 'My Saved Ideas', icon: <FileText size={16} />, path: '/my-ideas' },
+    { label: 'My Owned Ideas', icon: <FileText size={16} />, path: '/my-ideas' },
     { label: 'Browse Ideas', icon: <Search size={16} />, path: '/browse-ideas' },
     { label: 'Upgrade to Pro', icon: <Crown size={16} />, path: '/payments' },
   ];
