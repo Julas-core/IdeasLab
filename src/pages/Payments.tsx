@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +17,10 @@ const Payments = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const ideaId = searchParams.get("ideaId");
+  const [ideaToPurchase, setIdeaToPurchase] = useState<{ idea_title: string } | null>(null);
 
   useEffect(() => {
     const fetchUserAndSubscription = async () => {
@@ -39,8 +44,26 @@ const Payments = () => {
       setLoading(false);
     };
 
+    const fetchIdeaToPurchase = async () => {
+      if (ideaId) {
+        const { data, error } = await supabase
+          .from('daily_ideas')
+          .select('idea_data, status')
+          .eq('id', ideaId)
+          .single();
+        
+        if (error || !data || data.status !== 'available') {
+          showError("The idea you're trying to purchase is no longer available.");
+          navigate('/dashboard');
+        } else {
+          setIdeaToPurchase({ idea_title: data.idea_data.idea.idea_title });
+        }
+      }
+    };
+
     fetchUserAndSubscription();
-  }, []);
+    fetchIdeaToPurchase();
+  }, [ideaId, navigate]);
 
   const createOrder = async () => {
     try {
@@ -63,12 +86,22 @@ const Payments = () => {
       return;
     }
     try {
-      const { error } = await supabase.functions.invoke('capture-paypal-order', {
-        body: { orderID: data.orderID, userId: user.id }
+      const { data: responseData, error } = await supabase.functions.invoke('capture-paypal-order', {
+        body: { 
+          orderID: data.orderID, 
+          userId: user.id,
+          ideaId: ideaId 
+        }
       });
       if (error) throw error;
-      showSuccess("Payment successful! You now have lifetime Pro access.");
-      setSubscriptionStatus('pro');
+
+      if (ideaId && responseData.newIdeaId) {
+        showSuccess("Payment successful! You now own this idea and have lifetime Pro access.");
+        navigate(`/idea/${responseData.newIdeaId}`);
+      } else {
+        showSuccess("Payment successful! You now have lifetime Pro access.");
+        setSubscriptionStatus('pro');
+      }
     } catch (err) {
       showError("Payment failed. Please try again or contact support.");
       console.error(err);
@@ -79,10 +112,10 @@ const Payments = () => {
     if (loading) {
       return <Button className="w-full" disabled>Loading status...</Button>;
     }
-    if (subscriptionStatus === 'pro') {
+    if (subscriptionStatus === 'pro' && !ideaId) {
       return (
         <Button className="w-full" disabled variant="secondary">
-          <CheckCircle className="mr-2 h-4 w-4" /> You have Lifetime Pro Access!
+          <CheckCircle className="mr-2 h-4 w-4" /> You already have Pro Access!
         </Button>
       );
     }
@@ -113,28 +146,34 @@ const Payments = () => {
       <Header />
       <main className="container mx-auto p-4 md:p-8 flex flex-col items-center justify-center min-h-[calc(100vh-120px)]">
         <div className="max-w-2xl w-full text-center mb-8">
-          <h2 className="text-4xl font-bold tracking-tight mb-4">Upgrade to Pro</h2>
+          <h2 className="text-4xl font-bold tracking-tight mb-4">
+            {ideaToPurchase ? `Own This Idea` : `Upgrade to Pro`}
+          </h2>
           <p className="text-lg text-muted-foreground">
-            Unlock all advanced features, AI builders, and go-to-market helpers to supercharge your startup ideas.
+            {ideaToPurchase 
+              ? `Gain exclusive ownership of "${ideaToPurchase.idea_title}" and unlock all Pro features.`
+              : `Unlock all advanced features, AI builders, and go-to-market helpers to supercharge your startup ideas.`
+            }
           </p>
         </div>
         <PayPalScriptProvider options={{ "client-id": PAYPAL_CLIENT_ID || "test", currency: "USD" }}>
             <Card className="w-full max-w-md border-primary/50 bg-primary/5">
             <CardHeader className="text-center">
                 <Crown className="h-10 w-10 text-primary mx-auto mb-2" />
-                <CardTitle className="text-3xl font-bold">Pro Plan</CardTitle>
+                <CardTitle className="text-3xl font-bold">{ideaToPurchase ? `Exclusive Idea` : "Pro Plan"}</CardTitle>
                 <CardDescription className="text-5xl font-extrabold text-primary mt-2">
                 $29.99<span className="text-lg text-muted-foreground"> Lifetime</span>
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <ul className="space-y-2 text-left text-muted-foreground">
+                {ideaToPurchase && <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Exclusive ownership of the idea</li>}
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> One-time payment, lifetime access</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> AI Analysis & Trend Signals</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Founder Fit Analysis</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Go-to-Market Helpers</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> Ready to Build? Prompts</li>
-                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> View & Manage Saved Ideas</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /> View & Manage Owned Ideas</li>
                 </ul>
 
                 <div className="pt-4 border-t border-border">
