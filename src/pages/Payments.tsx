@@ -9,14 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/integrations/supabase/auth-context";
 
 const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
 const Payments = () => {
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, profile, refetchProfile, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const ideaId = searchParams.get("ideaId");
@@ -25,27 +23,6 @@ const Payments = () => {
   const [isAdminBypassVisible, setIsAdminBypassVisible] = useState(false);
 
   useEffect(() => {
-    const fetchUserAndSubscription = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-
-      if (user) {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('subscription_status')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching subscription status:", error);
-          showError("Failed to load subscription status.");
-        } else if (profile) {
-          setSubscriptionStatus(profile.subscription_status);
-        }
-      }
-      setLoading(false);
-    };
-
     const fetchIdeaToPurchase = async () => {
       if (ideaId) {
         const { data, error } = await supabase
@@ -63,7 +40,6 @@ const Payments = () => {
       }
     };
 
-    fetchUserAndSubscription();
     fetchIdeaToPurchase();
   }, [ideaId, navigate]);
 
@@ -97,12 +73,14 @@ const Payments = () => {
       });
       if (error) throw error;
 
+      await refetchProfile();
+
       if (ideaId && responseData.newIdeaId) {
         showSuccess("Payment successful! You now own this idea and have lifetime Pro access.");
         navigate(`/idea/${responseData.newIdeaId}`);
       } else {
         showSuccess("Payment successful! You now have lifetime Pro access.");
-        setSubscriptionStatus('pro');
+        navigate('/dashboard');
       }
     } catch (err) {
       showError("Payment failed. Please try again or contact support.");
@@ -121,9 +99,9 @@ const Payments = () => {
         .update({ subscription_status: 'admin' })
         .eq('id', user.id);
       if (error) throw error;
-      showSuccess("Admin Pro access granted! Refreshing...");
-      setSubscriptionStatus('admin');
-      setTimeout(() => window.location.reload(), 1500);
+      await refetchProfile();
+      showSuccess("Admin Pro access granted!");
+      navigate('/dashboard');
     } catch (err) {
       showError("Failed to grant admin access.");
       console.error(err);
@@ -140,10 +118,10 @@ const Payments = () => {
   };
 
   const renderContent = () => {
-    if (loading) {
+    if (authLoading) {
       return <Button className="w-full" disabled>Loading status...</Button>;
     }
-    if (['pro', 'admin'].includes(subscriptionStatus || '') && !ideaId) {
+    if (['pro', 'admin'].includes(profile?.subscription_status || '') && !ideaId) {
       return (
         <Button className="w-full" disabled variant="secondary">
           <CheckCircle className="mr-2 h-4 w-4" /> You already have Pro Access!

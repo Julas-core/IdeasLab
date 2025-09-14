@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -15,41 +13,12 @@ import {
 import { LayoutDashboard, FileText, Crown, LogOut, LogIn, User as UserIcon, Search } from 'lucide-react';
 import { ExpandableTabs } from '@/components/ui/expandable-tabs';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/integrations/supabase/auth-context';
 
 const Header = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<{ first_name: string | null, subscription_status: string | null } | null>(null);
+  const { user, profile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('first_name, subscription_status')
-          .eq('id', user.id)
-          .single();
-        setProfile(profileData);
-      }
-    };
-    fetchUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        supabase.from('profiles').select('first_name, subscription_status').eq('id', session.user.id).single().then(({ data }) => setProfile(data));
-      } else {
-        setProfile(null);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

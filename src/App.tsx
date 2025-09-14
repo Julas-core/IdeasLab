@@ -9,13 +9,13 @@ import Payments from "./pages/Payments";
 import BrowseIdeas from "./pages/BrowseIdeas"; // Import BrowseIdeas
 import NotFound from "./pages/NotFound";
 import { Toaster } from "sonner";
-import { SessionContextProvider } from "./integrations/supabase/session-context";
+import { AuthContextProvider } from "./integrations/supabase/auth-context";
 import { ThemeProvider } from "./components/theme/theme-provider";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 
 function App() {
   return (
-    <SessionContextProvider>
+    <AuthContextProvider>
       <ThemeProvider forcedTheme="dark" attribute="class">
         <Toaster />
         <Router>
@@ -36,7 +36,7 @@ function App() {
           </Routes>
         </Router>
       </ThemeProvider>
-    </SessionContextProvider>
+    </AuthContextProvider>
   );
 }
 

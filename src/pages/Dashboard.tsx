@@ -15,16 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Save, ExternalLink, Copy, FileText, RefreshCw, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
-import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Link, useNavigate } from "react-router-dom";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { Textarea } from "@/components/ui/textarea";
 import { ProFeatureCard } from "@/components/layout/ProFeatureCard";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { IdeaAttributes, IdeaAttributesData } from "@/components/ideas/IdeaAttributes";
 import { IdeaHealthMetrics, IdeaHealthMetricsData } from "@/components/ideas/IdeaHealthMetrics";
 import { ValueLadder, ValueLadderItem } from "@/components/ideas/ValueLadder";
+import { useAuth } from "@/integrations/supabase/auth-context";
 
 interface IdeaData {
   idea_title: string;
@@ -44,13 +43,8 @@ interface DailyIdeaResponse {
   value_ladder: ValueLadderItem[];
 }
 
-interface ProfileData {
-    first_name: string | null;
-    skills_description: string | null;
-    subscription_status: string | null;
-}
-
 const Dashboard = () => {
+  const { user, profile, loading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [ideaGenerated, setIdeaGenerated] = useState(false);
   const [dailyIdeaId, setDailyIdeaId] = useState<string | null>(null);
@@ -63,34 +57,18 @@ const Dashboard = () => {
   const [ideaAttributes, setIdeaAttributes] = useState<IdeaAttributesData | null>(null);
   const [ideaHealthMetrics, setIdeaHealthMetrics] = useState<IdeaHealthMetricsData | null>(null);
   const [valueLadder, setValueLadder] = useState<ValueLadderItem[] | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [showBuilders, setShowBuilders] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkUserAndProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-
-      if (user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('first_name, skills_description, subscription_status')
-          .eq('id', user.id)
-          .single();
-        
-        setProfile(profileData);
-        if (profileData && !profileData.first_name) {
-            setShowProfilePrompt(true);
-        }
+    if (!authLoading) {
+      fetchDailyIdea();
+      if (profile && !profile.first_name) {
+        setShowProfilePrompt(true);
       }
-    };
-    
-    fetchDailyIdea();
-    checkUserAndProfile();
-  }, []);
+    }
+  }, [authLoading, profile]);
 
   const fetchDailyIdea = async (forceNew = false) => {
     setIsLoading(true);
@@ -187,7 +165,7 @@ Key features to include: User authentication, basic dashboard, core functionalit
       <BGPattern variant="grid" mask="fade-edges" />
       <Header />
       <main className="container mx-auto p-4 md:p-8">
-        {isLoading ? (
+        {isLoading || authLoading ? (
           <LoadingSkeleton />
         ) : (
           currentIdea && (
