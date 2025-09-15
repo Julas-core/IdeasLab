@@ -9,7 +9,7 @@ export function Features() {
                 <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Discover Your Next Venture</h2>
                     <p className="mt-4 text-lg text-muted-foreground">
-                        IdeaLab provides a suite of tools to help you from inspiration to implementation.
+                        Upstart provides a suite of tools to help you from inspiration to implementation.
                     </p>
                 </div>
                 <div className="relative">

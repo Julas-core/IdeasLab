@@ -7,7 +7,7 @@ const testimonials = [
   {
     name: 'Sarah Johnson',
     role: 'Founder, TechStartup',
-    content: 'IdeaLab helped me validate my startup idea faster than I ever thought possible. The AI analysis is spot on!',
+    content: 'Upstart helped me validate my startup idea faster than I ever thought possible. The AI analysis is spot on!',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face',
     rating: 5
   },
@@ -21,7 +21,7 @@ const testimonials = [
   {
     name: 'Emma Rodriguez',
     role: 'Entrepreneur',
-    content: 'From idea generation to go-to-market strategy, IdeaLab covers it all. Saved me weeks of research.',
+    content: 'From idea generation to go-to-market strategy, Upstart covers it all. Saved me weeks of research.',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
     rating: 5
   }
@@ -34,7 +34,7 @@ export function TestimonialsSectionDemo() {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold tracking-tight mb-4">What Our Users Say</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of entrepreneurs who have discovered their next big idea with IdeaLab.
+            Join thousands of entrepreneurs who have discovered their next big idea with Upstart.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

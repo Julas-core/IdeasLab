@@ -399,7 +399,7 @@ Key features to include: User authentication, basic dashboard, core functionalit
       <Dialog open={showProfilePrompt} onOpenChange={setShowProfilePrompt}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Welcome to IdeaLab!</DialogTitle>
+                <DialogTitle>Welcome to Upstart!</DialogTitle>
                 <DialogDescription>
                     Complete your profile to get the most out of your experience, including more accurate Founder Fit scores.
                 </DialogDescription>

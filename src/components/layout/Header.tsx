@@ -51,8 +51,8 @@ const Header = () => {
     <header className="sticky top-4 z-50 max-w-6xl mx-auto px-4">
       <div className="w-full bg-background/80 backdrop-blur-sm border rounded-full p-2 flex items-center justify-between shadow-lg">
         <Link to="/" className="flex items-center gap-2 pl-2">
-          <img src="/logo.svg" alt="IdeaLab Logo" className="h-8 w-8" />
-          <span className="font-bold text-lg hidden sm:inline">IdeaLab</span>
+          <img src="/logo.svg" alt="Upstart Logo" className="h-8 w-8" />
+          <span className="font-bold text-lg hidden sm:inline">Upstart</span>
         </Link>
 
         <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
