@@ -1,4 +1,3 @@
-// ...existing code...
 # IdeasLab
 
 IdeasLab is a workspace for small prototypes and experiments that explore product and technical ideas. This repository collects short-lived apps, utilities, and demos meant for iteration and learning.
@@ -53,4 +52,3 @@ Check the package.json, pyproject.toml or project files for exact scripts.
 
 ## Notes
 This repo is intentionally lightweight and experimental. Expect breaking changes as ideas mature.
-
