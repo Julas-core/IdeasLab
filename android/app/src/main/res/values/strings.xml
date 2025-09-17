@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Upstart</string>
-    <string name="title_activity_main">Upstart</string>
-    <string name="package_name">com.example.upstart</string>
-    <string name="custom_url_scheme">com.example.upstart</string>
-</resources>
